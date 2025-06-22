@@ -1,4 +1,9 @@
 package com.vibe.yoriview.domain.review;
 
-public class ReviewRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface ReviewRepository extends JpaRepository<Review, String> {
+    List<Review> findByUserId(String userId);
 }

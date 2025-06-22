@@ -1,4 +1,6 @@
 package com.vibe.yoriview.domain.restaurant;
 
-public class LocationRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface LocationRepository extends JpaRepository<Location, String> {
 }
