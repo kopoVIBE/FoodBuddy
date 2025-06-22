@@ -1,4 +1,4 @@
 package com.vibe.yoriview.domain.receipt;
 
-public class ReceiptItem {
+public class ReceiptService {
 }

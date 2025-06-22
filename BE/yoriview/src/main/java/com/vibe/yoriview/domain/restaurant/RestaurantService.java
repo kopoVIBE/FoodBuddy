@@ -1,4 +1,4 @@
 package com.vibe.yoriview.domain.restaurant;
 
-public class Restaurant {
+public class RestaurantService {
 }

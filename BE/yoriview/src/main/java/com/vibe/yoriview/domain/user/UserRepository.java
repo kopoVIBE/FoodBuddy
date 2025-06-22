@@ -1,4 +1,4 @@
 package com.vibe.yoriview.domain.user;
 
-public class User {
+public class UserRepository {
 }
