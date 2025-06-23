@@ -1,4 +1,5 @@
 ### 1. 회원가입
+# 사용자 회원가입 요청
 POST http://localhost:8080/api/users/register
 Content-Type: application/json
 
@@ -9,8 +10,8 @@ Content-Type: application/json
   "defaultStyleId": "FRIENDLY"
 }
 
-
 ### 2. 로그인
+# JWT 토큰을 발급받기 위한 로그인 요청
 POST http://localhost:8080/api/users/login
 Content-Type: application/json
 
@@ -20,92 +21,34 @@ Content-Type: application/json
 }
 
 ### 3. 내 정보 조회
+# 로그인 후 받은 토큰을 사용하여 내 정보 조회
 GET http://localhost:8080/api/users/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI3YWY0YWMwNS1lOGRmLTRkMGQtYjFlMS1mMGI1NDk1YWViNTAiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjQ2Mjg4LCJleHAiOjE3NTA3MzI2ODh9.aGPFb8h0TJiSDTpA6qg9PU_dhfUGk7oLu9bpVzeYe3A
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2OTdiMjFmMi04OWM4LTQwNDYtOGQzZS1hNGUxMDEwZjQ0MzUiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjU1MDc5LCJleHAiOjE3NTA3NDE0Nzl9.7G_hngBDsH2UnMDqWl8ufcjlzQ-IttFxesTkPJQqZVI
 
 ### 4. 프로필 수정
+# 닉네임 또는 스타일을 변경
 PUT http://localhost:8080/api/users/me
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI3YWY0YWMwNS1lOGRmLTRkMGQtYjFlMS1mMGI1NDk1YWViNTAiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjQ2Mjg4LCJleHAiOjE3NTA3MzI2ODh9.aGPFb8h0TJiSDTpA6qg9PU_dhfUGk7oLu9bpVzeYe3A
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2OTdiMjFmMi04OWM4LTQwNDYtOGQzZS1hNGUxMDEwZjQ0MzUiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjU1MDc5LCJleHAiOjE3NTA3NDE0Nzl9.7G_hngBDsH2UnMDqWl8ufcjlzQ-IttFxesTkPJQqZVI
 
 {
-  "nickname": "수정된유저",
+  "nickname": "수정수정유저",
   "defaultStyleId": "EMOTIONAL"
 }
 
 ### 5. 비밀번호 변경
+# 현재 비밀번호 확인 후 새 비밀번호로 변경
 PUT http://localhost:8080/api/users/password
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI3YWY0YWMwNS1lOGRmLTRkMGQtYjFlMS1mMGI1NDk1YWViNTAiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjQ2Mjg4LCJleHAiOjE3NTA3MzI2ODh9.aGPFb8h0TJiSDTpA6qg9PU_dhfUGk7oLu9bpVzeYe3A
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2OTdiMjFmMi04OWM4LTQwNDYtOGQzZS1hNGUxMDEwZjQ0MzUiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjU1MDc5LCJleHAiOjE3NTA3NDE0Nzl9.7G_hngBDsH2UnMDqWl8ufcjlzQ-IttFxesTkPJQqZVI
 
 {
-  "currentPassword": "A",
-  "newPassword": "1234qwer!"
+  "currentPassword": "1234qwer!",
+  "newPassword": "5678asdf!"
 }
 
-### [1] 리뷰 스타일 등록
-POST http://localhost:8080/api/review-styles
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI3YWY0YWMwNS1lOGRmLTRkMGQtYjFlMS1mMGI1NDk1YWViNTAiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjQ2Mjg4LCJleHAiOjE3NTA3MzI2ODh9.aGPFb8h0TJiSDTpA6qg9PU_dhfUGk7oLu9bpVzeYe3A
-
-{
-  "styleId": "HAPPY",
-  "styleName": "햅삐",
-  "description": "햅삐."
-}
-
-###
-
-### [2] 리뷰 스타일 전체 조회
-GET http://localhost:8080/api/review-styles
-
-###
-
-### [3] 리뷰 등록
-POST http://localhost:8080/api/reviews
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI3YWY0YWMwNS1lOGRmLTRkMGQtYjFlMS1mMGI1NDk1YWViNTAiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjQ2Mjg4LCJleHAiOjE3NTA3MzI2ODh9.aGPFb8h0TJiSDTpA6qg9PU_dhfUGk7oLu9bpVzeYe3A
-
-{
-  "styleId": "BAD",
-  "receiptId": "RECEIPT123",
-  "restaurantId": "RESTAURANT123",
-  "locationId": "SEOUL_MAPO",
-  "content": "분위기가 너무 좋았어요! 음식도 맛있고 감성적인 시간이었어요.",
-  "rating": 4.5
-}
-
-###
-
-### [4] 내 리뷰 전체 조회
-GET http://localhost:8080/api/reviews/me
-#Authorization: Bearer {{token}}
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI3YWY0YWMwNS1lOGRmLTRkMGQtYjFlMS1mMGI1NDk1YWViNTAiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjQ2Mjg4LCJleHAiOjE3NTA3MzI2ODh9.aGPFb8h0TJiSDTpA6qg9PU_dhfUGk7oLu9bpVzeYe3A
-
-###
-
-### [5] 리뷰 수정
-PUT http://localhost:8080/api/reviews/dd96cf40-1461-4d3e-a978-c73dbeeeec22
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI3YWY0YWMwNS1lOGRmLTRkMGQtYjFlMS1mMGI1NDk1YWViNTAiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjQ2Mjg4LCJleHAiOjE3NTA3MzI2ODh9.aGPFb8h0TJiSDTpA6qg9PU_dhfUGk7oLu9bpVzeYe3A
-
-{
-  "styleId": "HAPPY",
-  "receiptId": "RECEIPT123",
-  "restaurantId": "RESTAURANT123",
-  "locationId": "SEOUL_MAPO",
-  "content": "수정된 리뷰입니다. 음식은 괜찮았지만 서비스는 아쉬웠어요.",
-  "rating": 3.0
-}
-
-###
-
-### [6] 리뷰 삭제
-DELETE http://localhost:8080/api/reviews/dd96cf40-1461-4d3e-a978-c73dbeeeec22
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI3YWY0YWMwNS1lOGRmLTRkMGQtYjFlMS1mMGI1NDk1YWViNTAiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjQ2Mjg4LCJleHAiOjE3NTA3MzI2ODh9.aGPFb8h0TJiSDTpA6qg9PU_dhfUGk7oLu9bpVzeYe3A
-
-
-### 4. 음식점 등록
+### 6. 음식점 등록
+# 새로운 음식점을 등록
 POST http://localhost:8080/api/restaurants
 Content-Type: application/json
 
@@ -116,14 +59,12 @@ Content-Type: application/json
   "locationId": "GN"
 }
 
-###
-
-### 5. 음식점 목록 조회
+### 7. 음식점 목록 조회
+# 등록된 음식점 리스트 확인
 GET http://localhost:8080/api/restaurants
 
-###
-
-### 6. 영수증 등록
+### 8. 영수증 등록
+# 음식점과 연결된 영수증 및 항목들 업로드
 POST http://localhost:8080/api/receipts
 Content-Type: application/json
 
@@ -134,41 +75,68 @@ Content-Type: application/json
   "receiptDate": "2025-06-22",
   "receiptAddress": "서울 강남구",
   "items": [
-    {
-      "foodName": "김치찌개",
-      "price": 9000,
-      "quantity": 1
-    },
-    {
-      "foodName": "계란말이",
-      "price": 7000,
-      "quantity": 1
-    }
+    { "foodName": "김치찌개", "price": 9000, "quantity": 1 },
+    { "foodName": "계란말이", "price": 7000, "quantity": 1 }
   ]
 }
 
-###
-
-### 7. 리뷰 등록
-POST http://localhost:8080/api/reviews
+### 9. 리뷰 스타일 등록 (관리자)
+# 사용 가능한 리뷰 스타일 추가
+POST http://localhost:8080/api/review-styles
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2OTdiMjFmMi04OWM4LTQwNDYtOGQzZS1hNGUxMDEwZjQ0MzUiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjU1MDc5LCJleHAiOjE3NTA3NDE0Nzl9.7G_hngBDsH2UnMDqWl8ufcjlzQ-IttFxesTkPJQqZVI
 
 {
-  "userId": "USER_ID_HERE",
-  "receiptId": "RECEIPT_ID_HERE",
-  "styleId": "FRIENDLY",
-  "restaurantId": "RESTAURANT_ID_HERE",
-  "locationId": "GN",
-  "content": "정말 맛있고 친절했어요.",
+  "styleId": "SAD",
+  "styleName": "샏",
+  "description": "샏"
+}
+
+### 10. 리뷰 스타일 전체 조회
+# 등록된 모든 리뷰 스타일 리스트
+GET http://localhost:8080/api/review-styles
+
+### 11. 리뷰 등록
+# 영수증 기반으로 리뷰 작성
+POST http://localhost:8080/api/reviews
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2OTdiMjFmMi04OWM4LTQwNDYtOGQzZS1hNGUxMDEwZjQ0MzUiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjU1MDc5LCJleHAiOjE3NTA3NDE0Nzl9.7G_hngBDsH2UnMDqWl8ufcjlzQ-IttFxesTkPJQqZVI
+
+{
+  "styleId": "BAD",
+  "receiptId": "RECEIPT123",
+  "restaurantId": "RESTAURANT123",
+  "locationId": "SEOUL_MAPO",
+  "content": "분위기가 너무 좋았어요! 음식도 맛있고 감성적인 시간이었어요.",
   "rating": 4.5
 }
 
-###
+### 12. 내 리뷰 전체 조회
+# 내가 작성한 모든 리뷰 가져오기
+GET http://localhost:8080/api/reviews/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2OTdiMjFmMi04OWM4LTQwNDYtOGQzZS1hNGUxMDEwZjQ0MzUiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjU1MDc5LCJleHAiOjE3NTA3NDE0Nzl9.7G_hngBDsH2UnMDqWl8ufcjlzQ-IttFxesTkPJQqZVI
 
-### 8. 사용자 전체 조회
-GET http://localhost:8080/api/users
+### 13. 리뷰 수정
+# 특정 리뷰 내용을 수정
+PUT http://localhost:8080/api/reviews/03718077-4870-4fd1-93f9-58c58b08afda
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2OTdiMjFmMi04OWM4LTQwNDYtOGQzZS1hNGUxMDEwZjQ0MzUiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjU1MDc5LCJleHAiOjE3NTA3NDE0Nzl9.7G_hngBDsH2UnMDqWl8ufcjlzQ-IttFxesTkPJQqZVI
 
-###
+{
+  "styleId": "HAPPY",
+  "receiptId": "RECEIPT123",
+  "restaurantId": "RESTAURANT123",
+  "locationId": "SEOUL_MAPO",
+  "content": "수정된 리뷰입니다. 음식은 괜찮았지만 서비스는 아쉬웠어요.",
+  "rating": 3.0
+}
 
-### 9. 리뷰 스타일 전체 조회
-GET http://localhost:8080/api/review-styles
+### 14. 리뷰 삭제
+# 특정 리뷰 삭제
+DELETE http://localhost:8080/api/reviews/{{reviewId}}
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2OTdiMjFmMi04OWM4LTQwNDYtOGQzZS1hNGUxMDEwZjQ0MzUiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjU1MDc5LCJleHAiOjE3NTA3NDE0Nzl9.7G_hngBDsH2UnMDqWl8ufcjlzQ-IttFxesTkPJQqZVI
+
+### 15. 내 통계 데이터 조회
+# 내가 작성한 리뷰/방문 기반 통계 확인
+GET http://localhost:8080/api/statistics/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2OTdiMjFmMi04OWM4LTQwNDYtOGQzZS1hNGUxMDEwZjQ0MzUiLCJlbWFpbCI6InRlc3QyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwNjU1MDc5LCJleHAiOjE3NTA3NDE0Nzl9.7G_hngBDsH2UnMDqWl8ufcjlzQ-IttFxesTkPJQqZVI
