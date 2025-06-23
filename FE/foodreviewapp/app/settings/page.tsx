@@ -98,82 +98,6 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* 알림 설정 */}
-        <Card className={isDarkMode ? "bg-gray-800 border-gray-700" : ""}>
-          <CardHeader>
-            <CardTitle
-              className={`flex items-center gap-2 ${
-                isDarkMode ? "text-white" : ""
-              }`}
-            >
-              <Bell className="h-5 w-5" />
-              알림 설정
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className={isDarkMode ? "text-white" : ""}>
-                  앱 알림
-                </Label>
-                <p
-                  className={`text-sm ${
-                    isDarkMode ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  앱 내 일반 알림 설정
-                </p>
-              </div>
-              <Switch
-                checked={notifications}
-                onCheckedChange={setNotifications}
-              />
-            </div>
-
-            <Separator className={isDarkMode ? "bg-gray-700" : ""} />
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className={isDarkMode ? "text-white" : ""}>
-                  리뷰 리마인더
-                </Label>
-                <p
-                  className={`text-sm ${
-                    isDarkMode ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  방문한 음식점 리뷰 작성 알림
-                </p>
-              </div>
-              <Switch
-                checked={reviewReminder}
-                onCheckedChange={setReviewReminder}
-              />
-            </div>
-
-            <Separator className={isDarkMode ? "bg-gray-700" : ""} />
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className={isDarkMode ? "text-white" : ""}>
-                  추천 알림
-                </Label>
-                <p
-                  className={`text-sm ${
-                    isDarkMode ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  맞춤 음식점 추천 알림
-                </p>
-              </div>
-              <Switch
-                checked={recommendationAlerts}
-                onCheckedChange={setRecommendationAlerts}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
         {/* 앱 설정 */}
         <Card className={isDarkMode ? "bg-gray-800 border-gray-700" : ""}>
           <CardHeader>
@@ -199,7 +123,11 @@ export default function SettingsPage() {
                   어두운 테마 사용
                 </p>
               </div>
-              <Switch checked={isDarkMode} onCheckedChange={toggleDarkMode} />
+              <Switch
+                checked={isDarkMode}
+                onCheckedChange={toggleDarkMode}
+                className="data-[state=checked]:bg-[#EB4C34]"
+              />
             </div>
 
             <Separator className={isDarkMode ? "bg-gray-700" : ""} />
