@@ -2,9 +2,12 @@
 # 빌드 시간 25초 목표, 테스트 제외, 의존성 캐시 최적화
 
 # ===== Stage 1: Dependencies =====
-FROM openjdk:17-jdk-slim as dependencies
+FROM eclipse-temurin:17-jdk-alpine AS dependencies
 
 WORKDIR /app
+
+# Alpine 패키지 업데이트 및 필수 도구 설치
+RUN apk add --no-cache bash
 
 # Gradle Wrapper와 설정 파일만 먼저 복사 (캐시 활용)
 COPY gradlew .
@@ -19,7 +22,7 @@ RUN chmod +x ./gradlew
 RUN ./gradlew dependencies --no-daemon
 
 # ===== Stage 2: Build =====
-FROM dependencies as builder
+FROM dependencies AS builder
 
 # 소스 코드 복사
 COPY src src
@@ -37,19 +40,19 @@ RUN ./gradlew clean assemble \
     -x integrationTest
 
 # ===== Stage 3: Runtime =====
-FROM openjdk:17-jre-slim as runtime
+FROM eclipse-temurin:17-jre-alpine AS runtime
 
-# 🔒 보안: non-root 사용자 생성
-RUN groupadd -r foodbuddy && useradd -r -g foodbuddy foodbuddy
+# 🔒 보안: non-root 사용자 생성 (Alpine 방식)
+RUN addgroup -g 1001 -S foodbuddy && \
+    adduser -u 1001 -S foodbuddy -G foodbuddy
 
 # 📁 애플리케이션 디렉토리 생성
 WORKDIR /app
 
-# 🏃‍♂️ 런타임 최적화를 위한 패키지 설치
-RUN apt-get update && apt-get install -y \
+# 🏃‍♂️ 런타임 최적화를 위한 패키지 설치 (Alpine 방식)
+RUN apk add --no-cache \
     curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    bash
 
 # 📦 빌드된 JAR 파일 복사
 COPY --from=builder /app/build/libs/*.jar app.jar

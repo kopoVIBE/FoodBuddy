@@ -45,21 +45,30 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
 
-# Build configuration
-RUN echo "/** @type {import('next').NextConfig} */" > next.config.temp.mjs && \
-    echo "const nextConfig = {" >> next.config.temp.mjs && \
-    echo "  output: 'standalone'," >> next.config.temp.mjs && \
-    echo "  eslint: { ignoreDuringBuilds: true }," >> next.config.temp.mjs && \
-    echo "  typescript: { ignoreBuildErrors: true }," >> next.config.temp.mjs && \
-    echo "  experimental: { optimizeCss: true }," >> next.config.temp.mjs && \
-    echo "  poweredByHeader: false," >> next.config.temp.mjs && \
-    echo "  compress: true" >> next.config.temp.mjs && \
-    echo "};" >> next.config.temp.mjs && \
-    echo "export default nextConfig;" >> next.config.temp.mjs && \
-    mv next.config.temp.mjs next.config.mjs
+# 🔧 Next.js 설정 파일 생성 (critters 오류 방지)
+RUN cat > next.config.mjs << 'EOF'
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'standalone',
+  eslint: { 
+    ignoreDuringBuilds: true 
+  },
+  typescript: { 
+    ignoreBuildErrors: true 
+  },
+  poweredByHeader: false,
+  compress: true,
+  swcMinify: true,
+  experimental: {
+    // optimizeCss 제거 - critters 의존성 문제 방지
+  }
+}
 
-# 🚀 병렬 빌드 실행
-RUN npm run build
+export default nextConfig
+EOF
+
+# 🚀 Next.js 빌드 실행 (에러 허용)
+RUN npm run build || (echo "⚠️ 빌드 경고가 있지만 계속 진행합니다" && npm run build -- --no-lint)
 
 # ===== Stage 4: Runner =====
 FROM base AS runner
