@@ -90,12 +90,40 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: 🔍 GitHub Secrets 확인
+        run: |
+          echo "🔍 AWS 자격 증명 확인 중..."
+          if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
+            echo "❌ AWS_ACCESS_KEY_ID가 설정되지 않았습니다!"
+            exit 1
+          else
+            echo "✅ AWS_ACCESS_KEY_ID가 설정되어 있습니다 (길이: ${#AWS_ACCESS_KEY_ID}자)"
+          fi
+
+          if [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then
+            echo "❌ AWS_SECRET_ACCESS_KEY가 설정되지 않았습니다!"
+            exit 1
+          else
+            echo "✅ AWS_SECRET_ACCESS_KEY가 설정되어 있습니다"
+          fi
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
       - name: 🔧 AWS CLI 설정
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: "no"
+
+      - name: 🔍 AWS 자격 증명 테스트
+        run: |
+          echo "🔍 AWS 연결 테스트 중..."
+          echo "AWS 리전: ${{ env.AWS_REGION }}"
+          aws sts get-caller-identity
+          echo "ECR 리포지토리 확인..."
+          aws ecr describe-repositories --region ${{ env.AWS_REGION }} --repository-names foodbuddy-backend || echo "⚠️ Backend ECR 리포지토리가 없습니다."
 
       - name: 🔑 ECR 로그인
         id: login-ecr
