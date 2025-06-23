@@ -15,10 +15,11 @@ public class ReceiptService {
     private final ReceiptItemRepository receiptItemRepository;
 
     public ReceiptResponseDto saveReceipt(ReceiptRequestDto dto) {
-        // 영수증 저장
+        // 영수증 저장, OCR 상호명 필드 추가 반영
         Receipt receipt = Receipt.builder()
                 .userId(dto.getUserId())
                 .restaurantId(dto.getRestaurantId())
+                .restaurantName(dto.getRestaurantName()) // 추가: OCR로 추출한 상호명 저장
                 .originalImg(dto.getOriginalImg())
                 .receiptDate(dto.getReceiptDate())
                 .receiptAddress(dto.getReceiptAddress())
@@ -36,7 +37,7 @@ public class ReceiptService {
                 .map(receiptItemRepository::save)
                 .toList();
 
-        // 응답 DTO 생성
+        // 응답 DTO 생성, OCR 상호명 포함
         List<ReceiptItemResponseDto> itemDtos = savedItems.stream()
                 .map(item -> ReceiptItemResponseDto.builder()
                         .itemId(item.getItemId())
@@ -50,6 +51,7 @@ public class ReceiptService {
                 .receiptId(receipt.getReceiptId())
                 .userId(receipt.getUserId())
                 .restaurantId(receipt.getRestaurantId())
+                .restaurantName(receipt.getRestaurantName()) // 추가
                 .originalImg(receipt.getOriginalImg())
                 .receiptDate(receipt.getReceiptDate())
                 .receiptAddress(receipt.getReceiptAddress())
@@ -73,6 +75,7 @@ public class ReceiptService {
                     .receiptId(r.getReceiptId())
                     .userId(r.getUserId())
                     .restaurantId(r.getRestaurantId())
+                    .restaurantName(r.getRestaurantName()) // 추가
                     .originalImg(r.getOriginalImg())
                     .receiptDate(r.getReceiptDate())
                     .receiptAddress(r.getReceiptAddress())

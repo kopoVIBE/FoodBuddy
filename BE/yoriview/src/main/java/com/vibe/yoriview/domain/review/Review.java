@@ -21,19 +21,19 @@ public class Review {
     @Column(name = "review_id", length = 36)
     private String reviewId;
 
-    @Column(name = "user_id", length = 36)
+    @Column(name = "user_id", length = 36, nullable = false)
     private String userId;
 
-    @Column(name = "receipt_id", length = 36)
+    @Column(name = "receipt_id", length = 36, nullable = false)
     private String receiptId;
 
-    @Column(name = "style_id", length = 10)
+    @Column(name = "style_id", length = 10, nullable = false)
     private String styleId;
 
-    @Column(name = "restaurant_id", length = 36)
+    @Column(name = "restaurant_id", length = 36, nullable = false)
     private String restaurantId;
 
-    @Column(name = "location_id", length = 10)
+    @Column(name = "location_id", length = 10, nullable = false)
     private String locationId;
 
     @Column(name = "content", columnDefinition = "TEXT", nullable = false)
