@@ -17,9 +17,19 @@ import { User, Bell, Palette } from "lucide-react";
 import { useApp } from "@/contexts/app-context";
 import ProfileEditModal from "@/components/profile-edit-modal";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
-  const { t, isDarkMode, language, toggleDarkMode, setLanguage } = useApp();
+  const router = useRouter();
+  const {
+    t,
+    isDarkMode,
+    language,
+    nickname,
+    toggleDarkMode,
+    setLanguage,
+    logout,
+  } = useApp();
   const [notifications, setNotifications] = useState(true);
   const [autoShare, setAutoShare] = useState(false);
   const [defaultStyle, setDefaultStyle] = useState("casual");
@@ -60,14 +70,16 @@ export default function SettingsPage() {
               </div>
               <div className="flex-1">
                 <h3 className={`font-medium ${isDarkMode ? "text-white" : ""}`}>
-                  푸드러버
+                  {nickname || "게스트"}
                 </h3>
                 <p
                   className={`text-sm ${
                     isDarkMode ? "text-gray-300" : "text-gray-600"
                   }`}
                 >
-                  foodlover@example.com
+                  {nickname
+                    ? `${nickname}@foodbuddy.com`
+                    : "로그인이 필요합니다"}
                 </p>
               </div>
               <Button
@@ -219,6 +231,22 @@ export default function SettingsPage() {
                   </SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <Separator className={isDarkMode ? "bg-gray-700" : ""} />
+
+            {/* 로그아웃 버튼 */}
+            <div className="pt-2">
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  logout();
+                  router.replace("/auth");
+                }}
+                className="w-full"
+              >
+                로그아웃
+              </Button>
             </div>
           </CardContent>
         </Card>

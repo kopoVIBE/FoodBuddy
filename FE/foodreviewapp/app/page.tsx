@@ -94,7 +94,7 @@ function SplashScreen({ onComplete }: { onComplete: () => void }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onComplete();
-    }, 3000); // 3초
+    }, 2000); // 2초로 단축
 
     return () => clearTimeout(timer);
   }, [onComplete]);
@@ -132,10 +132,14 @@ function SplashScreen({ onComplete }: { onComplete: () => void }) {
 }
 
 export default function HomePage() {
-  const { t, isDarkMode } = useApp();
+  const {
+    t,
+    isDarkMode,
+    nickname,
+    isAuthenticated: globalIsAuthenticated,
+  } = useApp();
   const router = useRouter();
   const [showSplash, setShowSplash] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("written");
   const [sortOrder, setSortOrder] = useState("latest");
@@ -167,48 +171,50 @@ export default function HomePage() {
     reviews: [],
   });
 
-  // 인증 상태 확인 및 스플래시 화면 상태 관리
+  // 스플래시 화면과 인증 상태 확인
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      // 로그인 상태 확인 (임시로 localStorage 사용)
+    const checkAuthStatus = () => {
+      // 클라이언트 사이드에서만 실행
+      if (typeof window === "undefined") return;
+
+      // 로그인 상태 확인
       const authToken = localStorage.getItem("authToken");
       const hasShownSplash = localStorage.getItem("hasShownSplash");
 
+      console.log("인증 상태 확인:", {
+        authToken: !!authToken,
+        hasShownSplash,
+      });
+
+      // 토큰이 없으면 auth 페이지로 리디렉션
       if (!authToken) {
-        // 로그인되지 않은 경우 auth 페이지로 리디렉션
-        router.push("/auth");
+        console.log("토큰 없음 - /auth로 리디렉션");
+        setIsLoading(false);
+        router.replace("/auth");
         return;
       }
 
-      // 로그인된 경우
-      setIsAuthenticated(true);
-      setIsLoading(false);
+      // 토큰이 있으면 인증된 사용자
+      console.log("토큰 존재 - 인증된 사용자");
 
-      // 스플래시 화면 로직은 별도로 처리
+      // 스플래시 화면을 보여줄지 결정
       if (!hasShownSplash) {
         setShowSplash(true);
+        // 2초 후 스플래시 화면 종료 (시간 단축)
+        setTimeout(() => {
+          setShowSplash(false);
+          setIsLoading(false);
+          localStorage.setItem("hasShownSplash", "true");
+        }, 2000);
+      } else {
+        // 스플래시를 이미 보여줬으면 바로 로딩 종료
+        setIsLoading(false);
       }
     };
 
+    // 즉시 실행 - 불필요한 지연 제거
     checkAuthStatus();
   }, [router]);
-
-  // 스플래시 화면 완료 처리
-  useEffect(() => {
-    if (showSplash) {
-      const timer = setTimeout(() => {
-        setShowSplash(false);
-        localStorage.setItem("hasShownSplash", "true");
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [showSplash]);
-
-  // 로딩 중이거나 인증되지 않은 경우 빈 화면 표시
-  if (isLoading || !isAuthenticated) {
-    return null;
-  }
 
   const sortOptions = [
     { value: "latest", label: "최신순" },
@@ -242,6 +248,16 @@ export default function HomePage() {
   const favoriteReviews = useMemo(() => {
     return favoriteRestaurants;
   }, []);
+
+  // 로딩 중인 경우 스플래시 화면 표시
+  if (isLoading) {
+    return <SplashScreen onComplete={() => {}} />;
+  }
+
+  // 인증되지 않은 경우 빈 화면 (리디렉션 중)
+  if (!globalIsAuthenticated) {
+    return null;
+  }
 
   // 플로팅 버튼 클릭 핸들러
   const handleFloatingButtonClick = () => {
@@ -304,7 +320,7 @@ export default function HomePage() {
                   isDarkMode ? "text-white" : "text-gray-900"
                 }`}
               >
-                안녕하세요! 마틸님
+                안녕하세요! {nickname || "게스트"}님
               </h1>
               <p
                 className={`text-sm ${
