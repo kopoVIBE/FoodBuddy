@@ -36,6 +36,7 @@ const nextConfig = withPWA({
     },
   ],
 })({
+  output: "standalone",
   eslint: {
     ignoreDuringBuilds: true,
   },
