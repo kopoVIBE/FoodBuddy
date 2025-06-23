@@ -1,0 +1,43 @@
+# --- 가장 중요한 항목 (Secrets) ---
+# API 키와 같은 민감한 정보가 담긴 환경 변수 파일
+#.env
+
+
+# --- 테스트 데이터 및 결과물 (Input/Output) ---
+# 로컬 테스트용 이미지와 결과 파일은 저장소에 포함하지 않음
+# input 폴더 안의 모든 파일을 무시
+input/*
+# output 폴더 안의 모든 파일을 무시
+output/*
+# (참고) 빈 폴더 자체를 유지하고 싶다면, 각 폴더에 .gitkeep 파일을 만들고 아래 두 줄의 주석을 해제
+# !input/.gitkeep
+# !output/.gitkeep
+
+
+# --- Python 관련 파일/폴더 ---
+# 파이썬 바이트코드 캐시 폴더
+__pycache__/
+# 컴파일된 파이썬 파일
+*.pyc
+*.pyo
+*.pyd
+
+# 가상 환경 폴더 (매우 중요)
+# 팀원 각자의 로컬 환경이 다르므로, 가상 환경 자체를 공유하지 않음
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+
+# --- 운영체제 및 개발 환경 파일 ---
+# macOS 시스템 파일
+.DS_Store
+# Windows 썸네일 캐시
+Thumbs.db
+
+# VS Code 설정 폴더
+.vscode/
+# PyCharm 등 JetBrains IDE 설정 폴더
+.idea/
