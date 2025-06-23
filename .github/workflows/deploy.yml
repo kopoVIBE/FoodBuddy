@@ -2,7 +2,14 @@ name: Deploy to Amazon ECR
 
 on:
   push:
-    branches: [main, develop, feature/*, hotfix/*, infra/*]
+    branches:
+      - main
+      - develop
+      - infra/*
+  pull_request:
+    branches:
+      - main
+      - develop
 
 env:
   AWS_REGION: ap-northeast-2
