@@ -278,7 +278,7 @@ jobs:
       # - name: 📊 배포 결과 슬랙 알림
       #   if: always()
       #   uses: 8398a7/action-slack@v3
-      #   with:
+      #   with: 아몰라
       #     status: ${{ job.status }}
       #     channel: "#deployments"
       #     text: |
