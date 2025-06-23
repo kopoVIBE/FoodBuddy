@@ -110,12 +110,23 @@ jobs:
   # 배포 작업
   deploy:
     name: 🚀 배포
-    needs: [build-frontend, build-backend] # 두 빌드 작업이 완료된 후 실행
+    needs: [build-frontend, build-backend]
     runs-on: ubuntu-latest
     environment: production
     steps:
       - name: 📥 소스코드 체크아웃
         uses: actions/checkout@v3
+
+      - name: 🔐 AWS 자격증명 설정
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🔑 ECR 로그인
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: 🚀 EC2 배포
         uses: appleboy/ssh-action@master
@@ -126,57 +137,9 @@ jobs:
           script: |
             echo "🎬 EC2 배포 시작: $(date)"
 
-            echo "📁 작업 디렉토리 생성"
-            mkdir -p ~/foodbuddy
             cd ~/foodbuddy
 
-            echo "📝 docker-compose.yml 생성"
-            cat > docker-compose.yml << 'EOL'
-            version: '3.8'
-
-            services:
-              mysql:
-                image: mysql:8.0
-                container_name: mysql
-                environment:
-                  MYSQL_ROOT_PASSWORD: try1234
-                  MYSQL_DATABASE: yoriview
-                ports:
-                  - "3306:3306"
-                volumes:
-                  - mysql_data:/var/lib/mysql
-                command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-                healthcheck:
-                  test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-                  timeout: 5s
-                  retries: 10
-
-              backend:
-                image: ${ECR_REGISTRY}/${ECR_REPOSITORY_BACKEND}:${IMAGE_TAG}
-                container_name: backend
-                ports:
-                  - "8080:8080"
-                environment:
-                  - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/yoriview?serverTimezone=Asia/Seoul&useSSL=false
-                  - SPRING_DATASOURCE_USERNAME=root
-                  - SPRING_DATASOURCE_PASSWORD=try1234
-                depends_on:
-                  mysql:
-                    condition: service_healthy
-
-              frontend:
-                image: ${ECR_REGISTRY}/${ECR_REPOSITORY_FRONTEND}:${IMAGE_TAG}
-                container_name: frontend
-                ports:
-                  - "3000:3000"
-                depends_on:
-                  - backend
-
-            volumes:
-              mysql_data:
-            EOL
-
-            echo "🔧 환경변수 설정"
+            # 환경변수 설정 (ECR_REGISTRY가 이제 제대로 설정됨)
             echo "ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}" > .env
             echo "ECR_REPOSITORY_FRONTEND=${{ env.ECR_REPOSITORY_FRONTEND }}" >> .env
             echo "ECR_REPOSITORY_BACKEND=${{ env.ECR_REPOSITORY_BACKEND }}" >> .env
