@@ -402,58 +402,62 @@ export default function HomePage() {
               즐겨찾기
             </button>
           </div>
+{/* 통계 + 정렬 공통 헤더 */}
+<div className="flex justify-between items-center">
+  {activeTab === "written" && (
+    <>
+      <p className="text-lg font-bold">
+        <span className="text-[#EB4C34]">버디</span>
+        <span className="text-[#1D1D1D]">가 남긴 맛집 리뷰 </span>
+        <span className="text-[#EB4C34] text-xl">{sortedReviews.length}</span>
+        <span className="text-[#1D1D1D]">개</span>
+      </p>
+
+      <div className="relative">
+        <Button
+          size="sm"
+          className={`rounded-full px-4 ${
+            isDarkMode
+              ? "bg-gray-700 hover:bg-gray-600 text-white"
+              : "bg-gray-800 hover:bg-gray-700 text-white"
+          }`}
+          onClick={() => setShowSortMenu(!showSortMenu)}
+        >
+          {getCurrentSortLabel()}
+          <ChevronDown className="w-4 h-4 ml-1" />
+        </Button>
+
+        {showSortMenu && (
+          <div
+            className={`absolute top-full right-0 mt-1 rounded-lg shadow-lg z-10 ${
+              isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+            } border`}
+          >
+          </div>
+        )}
+      </div>
+    </>
+  )}
+
+  {activeTab === "favorites" && (
+    <>
+      <p className="text-lg font-bold">
+        <span className="text-[#EB4C34]">버디</span>
+        <span className="text-[#1D1D1D]">가 자주 가는 단골 맛집 </span>
+        <span className="text-[#EB4C34] text-xl">{favoriteReviews.length}</span>
+        <span className="text-[#1D1D1D]">곳이에요!</span>
+      </p>
+
+      <div></div> {/* 정렬 버튼 자리 유지용 (필요 시 삭제 가능) */}
+    </>
+  )}
+</div>
 
           {/* 작성한 리뷰 탭일 때만 통계 및 정렬 표시 */}
           {activeTab === "written" && (
             <div className="flex justify-between items-center">
-              <div>
-                <p className="text-lg font-bold">
-                  <span className="text-[#EB4C34]">버디</span>
-                  <span className="text-[#1D1D1D]">와 쓴 총 리뷰 </span>
-                  <span className="text-[#EB4C34] text-xl">112</span>
-                  <span className="text-[#1D1D1D]">개</span>
-                </p>
-              </div>
-              <div className="relative">
-                <Button
-                  size="sm"
-                  className={`rounded-full px-4 ${
-                    isDarkMode
-                      ? "bg-gray-700 hover:bg-gray-600 text-white"
-                      : "bg-gray-800 hover:bg-gray-700 text-white"
-                  }`}
-                  onClick={() => setShowSortMenu(!showSortMenu)}
-                >
-                  {getCurrentSortLabel()}
-                  <ChevronDown className="w-4 h-4 ml-1" />
-                </Button>
-
-                {showSortMenu && (
-                  <div
-                    className={`absolute top-full right-0 mt-1 rounded-lg shadow-lg z-10 ${
-                      isDarkMode
-                        ? "bg-gray-800 border-gray-700"
-                        : "bg-white border-gray-200"
-                    } border`}
-                  >
-                    {sortOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => handleSortSelect(option.value)}
-                        className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                          isDarkMode ? "text-white" : "text-gray-900"
-                        } ${
-                          sortOrder === option.value
-                            ? "bg-gray-100 dark:bg-gray-700"
-                            : ""
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              
+              
             </div>
           )}
         </div>
@@ -530,7 +534,7 @@ export default function HomePage() {
                     {/* 수정 버튼 */}
                     <Button
                       size="sm"
-                      className="h-[20px] px-3 bg-[#EAEAEA] hover:bg-gray-300 text-[#333333] text-[12px] font-medium rounded-[10px]"
+                      className="h-[22px] px-3 bg-[#EAEAEA] hover:bg-gray-300 text-white text-[12px] font-medium rounded-[10px]"
                       onClick={(e) => {
                         e.stopPropagation();
                         setReviewEditModal({ isOpen: true, review });
@@ -611,10 +615,10 @@ export default function HomePage() {
 
                     {/* 방문 정보 */}
                     <div className="space-y-1">
-                      <div className="text-[10.8px] font-medium text-[#333333] leading-[13.2px]">
+                      <div className="text-[10.8px] font-normal text-[#666666] leading-[13.2px]">
                         방문 횟수 : {restaurant.visitCount}회
                       </div>
-                      <div className="text-[10.8px] font-medium text-[#333333] leading-[13.2px]">
+                      <div className="text-[10.8px] font-normal text-[#666666] leading-[13.2px]">
                         최근 방문 : {restaurant.lastVisit}
                       </div>
                     </div>

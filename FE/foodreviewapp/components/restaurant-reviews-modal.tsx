@@ -42,7 +42,7 @@ export default function RestaurantReviewsModal({
       <div className="relative w-full max-w-md bg-white rounded-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[85vh] flex flex-col">
         {/* 헤더 */}
         <div className="flex items-center justify-between p-4 bg-white sticky top-0 z-10">
-          <h3 className="text-[18px] font-semibold">{restaurantName} 리뷰</h3>
+          <h3 className="text-[18px] text-[#333333] font-semibold">{restaurantName}</h3>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-5 w-5" />
           </Button>
