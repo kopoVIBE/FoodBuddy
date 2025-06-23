@@ -13,9 +13,9 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
 
-    public ReviewResponseDto create(ReviewRequestDto dto) {
+    public ReviewResponseDto create(ReviewRequestDto dto, String userId) {
         Review review = Review.builder()
-                .userId(dto.getUserId())
+                .userId(userId)
                 .receiptId(dto.getReceiptId())
                 .styleId(dto.getStyleId())
                 .restaurantId(dto.getRestaurantId())
@@ -38,4 +38,36 @@ public class ReviewService {
                 .map(ReviewResponseDto::from)
                 .toList();
     }
+
+    public ReviewResponseDto updateReview(String reviewId, ReviewRequestDto dto, String userId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
+
+        // 사용자 권한 확인
+        if (!review.getUserId().equals(userId)) {
+            throw new RuntimeException("리뷰 수정 권한이 없습니다.");
+        }
+
+        // 수정 가능 필드만 업데이트
+        review.setContent(dto.getContent());
+        review.setRating(dto.getRating());
+        review.setStyleId(dto.getStyleId());
+        review.setLocationId(dto.getLocationId());
+
+        reviewRepository.save(review);
+        return ReviewResponseDto.from(review);
+    }
+
+    public void deleteReview(String reviewId, String userId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
+
+        if (!review.getUserId().equals(userId)) {
+            throw new RuntimeException("리뷰 삭제 권한이 없습니다.");
+        }
+
+        reviewRepository.delete(review);
+    }
+
+
 }
