@@ -1,9 +1,6 @@
 package com.vibe.yoriview.domain.user;
 
-import com.vibe.yoriview.domain.user.dto.LoginRequestDto;
-import com.vibe.yoriview.domain.user.dto.LoginResponseDto;
-import com.vibe.yoriview.domain.user.dto.UserRequestDto;
-import com.vibe.yoriview.domain.user.dto.UserResponseDto;
+import com.vibe.yoriview.domain.user.dto.*;
 import com.vibe.yoriview.global.config.JwtTokenProvider;
 import com.vibe.yoriview.global.exception.EmailAlreadyExistsException;
 import com.vibe.yoriview.global.exception.InvalidCredentialsException;
@@ -62,4 +59,39 @@ public class UserService {
                 .nickname(user.getNickname())
                 .build();
     }
+
+    public UserResponseDto getUserInfo(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        return UserResponseDto.from(user);
+    }
+
+    public UserResponseDto updateUserInfo(String userId, UserRequestDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        // 수정 가능한 항목만 갱신
+        user.setNickname(dto.getNickname());
+        user.setDefaultStyleId(dto.getDefaultStyleId());
+
+        userRepository.save(user);
+
+        return UserResponseDto.from(user);
+    }
+
+    public void changePassword(String userId, PasswordChangeRequestDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPasswordHash())) {
+            throw new InvalidCredentialsException("기존 비밀번호가 일치하지 않습니다.");
+        }
+
+        String newHashed = passwordEncoder.encode(dto.getNewPassword());
+        user.setPasswordHash(newHashed);
+        userRepository.save(user);
+    }
+
+
+
 }
