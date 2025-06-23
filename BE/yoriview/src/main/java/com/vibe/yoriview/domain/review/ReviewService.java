@@ -33,8 +33,22 @@ public class ReviewService {
                 .toList();
     }
 
+    //
     public List<ReviewResponseDto> findByUserId(String userId) {
         return reviewRepository.findByUserId(userId).stream()
+                .map(ReviewResponseDto::from)
+                .toList();
+    }
+
+    public List<ReviewResponseDto> findByUserId(String userId, String order) {
+        List<Review> reviews;
+        if ("oldest".equalsIgnoreCase(order)) {
+            reviews = reviewRepository.findByUserIdOrderByCreatedAtAsc(userId);
+        } else {
+            reviews = reviewRepository.findByUserIdOrderByCreatedAtDesc(userId);  // 최신순 기본
+        }
+
+        return reviews.stream()
                 .map(ReviewResponseDto::from)
                 .toList();
     }

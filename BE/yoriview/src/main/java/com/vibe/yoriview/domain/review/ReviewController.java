@@ -54,9 +54,11 @@ public class ReviewController {
 
     // 로그인한 사용자의 리뷰만 조회
     @GetMapping("/me")
-    public List<ReviewResponseDto> getMyReviews() {
+    public List<ReviewResponseDto> getMyReviews(
+            @RequestParam(defaultValue = "latest") String order
+    ) {
         String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return reviewService.findByUserId(userId);
+        return reviewService.findByUserId(userId, order);
     }
 
 }
