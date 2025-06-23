@@ -48,9 +48,12 @@ export default function ClientLayout({
     }
   }, [pathname, isClient]);
 
-  // 스플래시 화면이거나 랜딩 페이지일 때는 네비게이션 숨김
+  // 스플래시 화면이거나 랜딩 페이지, 인증 페이지일 때는 네비게이션 숨김
   const hideNavigation =
-    showSplash || pathname === "/landing" || pathname === "/splash";
+    showSplash ||
+    pathname === "/landing" ||
+    pathname === "/splash" ||
+    pathname === "/auth";
 
   return (
     <>

@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { User, Bell, Palette } from "lucide-react";
 import { useApp } from "@/contexts/app-context";
 import ProfileEditModal from "@/components/profile-edit-modal";
+import Image from "next/image";
 
 export default function SettingsPage() {
   const { t, isDarkMode, language, toggleDarkMode, setLanguage } = useApp();
@@ -48,8 +49,14 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                <User className="h-8 w-8 text-orange-600" />
+              <div className="w-16 h-16 bg-[#EB4C3420] rounded-full flex items-center justify-center">
+                <Image
+                  src="/logo.svg"
+                  alt="프로필"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8"
+                />
               </div>
               <div className="flex-1">
                 <h3 className={`font-medium ${isDarkMode ? "text-white" : ""}`}>
