@@ -123,7 +123,11 @@ export default function SettingsPage() {
                   어두운 테마 사용
                 </p>
               </div>
-              <Switch checked={isDarkMode} onCheckedChange={toggleDarkMode} />
+              <Switch
+                checked={isDarkMode}
+                onCheckedChange={toggleDarkMode}
+                className="data-[state=checked]:bg-[#EB4C34]"
+              />
             </div>
 
             <Separator className={isDarkMode ? "bg-gray-700" : ""} />
