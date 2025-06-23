@@ -1,6 +1,6 @@
 ---
 description: 
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 이 코드베이스의 구조 및 중요 파일들을 네가 한눈에 파악할 수 있는 문서를 만들어줘. mermaid diagram을 쓰는 것도 좋아. 그리고 그걸 적절한 프로젝트 룰로 추가해줘. AlwaysApply: true로 만들어줘.

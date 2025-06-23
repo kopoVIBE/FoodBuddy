@@ -2,9 +2,9 @@ name: 🚀 FoodBuddy CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, infra/*, feature/* ]
+    branches: [main, infra/*, feature/*]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   ECR_REGISTRY: 268556604739.dkr.ecr.ap-northeast-2.amazonaws.com
@@ -48,7 +48,7 @@ jobs:
         run: |
           echo "🗑️ 디스크 정리 시작..."
           df -h
-          
+
           # 병렬로 불필요한 파일들 삭제
           {
             sudo rm -rf /usr/share/dotnet &
@@ -58,10 +58,10 @@ jobs:
             sudo rm -rf "$AGENT_TOOLSDIRECTORY" &
             wait
           }
-          
+
           # Docker 정리
           docker system prune -f
-          
+
           echo "✅ 디스크 정리 완료"
           df -h
 
@@ -77,8 +77,8 @@ jobs:
       - name: ☕ Java 17 설정
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
 
       - name: 📦 Gradle 캐시
         uses: actions/cache@v4
@@ -105,17 +105,17 @@ jobs:
         working-directory: BE/yoriview
         run: |
           echo "🔨 Gradle 빌드 시작 (테스트 제외, 병렬 처리)..."
-          
+
           # gradlew 실행 권한 부여
           chmod +x ./gradlew
-          
+
           # 최적화된 빌드 (테스트 제외, 병렬 처리)
           ./gradlew clean assemble --parallel --build-cache --no-daemon
-          
+
           echo "📦 Docker 이미지 빌드..."
           docker build -t $ECR_REGISTRY/$PROJECT_NAME-backend:$GITHUB_SHA .
           docker push $ECR_REGISTRY/$PROJECT_NAME-backend:$GITHUB_SHA
-          
+
           # latest 태그도 푸시 (프로덕션인 경우)
           if [[ "${{ needs.prepare.outputs.is-production }}" == "true" ]]; then
             docker tag $ECR_REGISTRY/$PROJECT_NAME-backend:$GITHUB_SHA $ECR_REGISTRY/$PROJECT_NAME-backend:latest
@@ -159,7 +159,7 @@ jobs:
           echo "📦 Docker 이미지 빌드 (멀티스테이지)..."
           docker build -t $ECR_REGISTRY/$PROJECT_NAME-frontend:$GITHUB_SHA .
           docker push $ECR_REGISTRY/$PROJECT_NAME-frontend:$GITHUB_SHA
-          
+
           # latest 태그도 푸시 (프로덕션인 경우)
           if [[ "${{ needs.prepare.outputs.is-production }}" == "true" ]]; then
             docker tag $ECR_REGISTRY/$PROJECT_NAME-frontend:$GITHUB_SHA $ECR_REGISTRY/$PROJECT_NAME-frontend:latest
@@ -186,77 +186,78 @@ jobs:
             # 배포 디렉토리 설정
             DEPLOY_ENV="${{ needs.prepare.outputs.is-production == 'true' && 'prod' || 'dev' }}"
             DEPLOY_DIR="/home/ubuntu/foodbuddy-${DEPLOY_ENV}"
-            
+
             echo "🚀 $DEPLOY_ENV 환경 배포 시작..."
-            
+
             # 배포 디렉토리 생성
             mkdir -p $DEPLOY_DIR
             cd $DEPLOY_DIR
-            
+
             # AWS CLI 설정 확인
             aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 268556604739.dkr.ecr.ap-northeast-2.amazonaws.com
-            
+
             # 환경변수 설정
             cat > .env << EOF
             # 🌍 환경 설정
             NODE_ENV=${{ needs.prepare.outputs.is-production == 'true' && 'production' || 'development' }}
-            
+
             # 🗄️ 데이터베이스 설정
             MYSQL_ROOT_PASSWORD=foodbuddy_root_password
             MYSQL_DATABASE=foodbuddy_db
             MYSQL_USER=foodbuddy_user
             MYSQL_PASSWORD=foodbuddy_password
-            
+
             # 🔗 서비스 URL
             BACKEND_URL=http://localhost:8080
             FRONTEND_URL=http://localhost:3000
-            
+
             # 🐳 Docker 이미지 설정
             ECR_REGISTRY=268556604739.dkr.ecr.ap-northeast-2.amazonaws.com
             IMAGE_TAG=${{ github.sha }}
             PROJECT_NAME=foodbuddy
             EOF
-            
+
             # Docker Compose 파일 다운로드
             curl -o docker-compose.yml https://raw.githubusercontent.com/${{ github.repository }}/main/Infra/docker-compose.yml
-            
+
             # 기존 컨테이너 중지 및 새 이미지로 배포
             echo "🔄 서비스 재시작..."
             docker-compose down
             docker-compose pull
             docker-compose up -d
-            
+
             # 헬스체크
             echo "🏥 헬스체크 시작..."
             sleep 30
-            
+
             # 백엔드 헬스체크
             if curl -f http://localhost:8080/actuator/health 2>/dev/null; then
               echo "✅ 백엔드 정상 구동"
             else
               echo "❌ 백엔드 헬스체크 실패"
             fi
-            
+
             # 프론트엔드 헬스체크
             if curl -f http://localhost:3000 2>/dev/null; then
               echo "✅ 프론트엔드 정상 구동"
             else
               echo "❌ 프론트엔드 헬스체크 실패"
             fi
-            
+
             echo "🎉 배포 완료!"
 
-      - name: 📊 배포 결과 슬랙 알림
-        if: always()
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          channel: '#deployments'
-          text: |
-            🚀 FoodBuddy 배포 결과
-            • 환경: ${{ needs.prepare.outputs.is-production == 'true' && '🟢 Production' || '🟡 Development' }}
-            • 브랜치: ${{ github.ref_name }}
-            • 커밋: ${{ github.sha }}
-            • 상태: ${{ job.status == 'success' && '✅ 성공' || '❌ 실패' }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
+      # 📊 배포 결과 슬랙 알림 (나중에 추가 예정)
+      # - name: 📊 배포 결과 슬랙 알림
+      #   if: always()
+      #   uses: 8398a7/action-slack@v3
+      #   with:
+      #     status: ${{ job.status }}
+      #     channel: "#deployments"
+      #     text: |
+      #       🚀 FoodBuddy 배포 결과
+      #       • 환경: ${{ needs.prepare.outputs.is-production == 'true' && '🟢 Production' || '🟡 Development' }}
+      #       • 브랜치: ${{ github.ref_name }}
+      #       • 커밋: ${{ github.sha }}
+      #       • 상태: ${{ job.status == 'success' && '✅ 성공' || '❌ 실패' }}
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

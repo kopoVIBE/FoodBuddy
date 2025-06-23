@@ -102,7 +102,7 @@ PROD_EC2_HOST=54.180.109.147
 DEV_EC2_HOST=54.180.109.147
 EC2_USERNAME=ubuntu
 EC2_SSH_KEY=your_ssh_private_key
-SLACK_WEBHOOK_URL=your_slack_webhook_url  # (선택사항)
+# SLACK_WEBHOOK_URL=your_slack_webhook_url  # (선택사항 - 나중에 추가 예정)
 ```
 
 ### 로컬 환경변수 설정
