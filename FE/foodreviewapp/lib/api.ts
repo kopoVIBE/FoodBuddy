@@ -84,4 +84,149 @@ export const login = async (data: LoginData): Promise<LoginResponse> => {
   return response.data;
 };
 
+// OCR API
+export interface OCRResult {
+  text: string;
+  restaurantName: string;
+  items: Array<{ name: string; price: number }>;
+  total: number;
+  address?: string;
+}
+
+export const processOCR = async (file: File): Promise<OCRResult> => {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const response = await axiosInstance.post("/api/ocr/process", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    timeout: 60000, // OCR 처리는 60초까지 대기
+  });
+
+  return response.data;
+};
+
+// 리뷰 생성 API
+export interface ReviewGenerationRequest {
+  restaurantName: string;
+  menuItems: Array<{ name: string; price: number }>;
+  tone: string; // friendly, professional, simple, emotional
+  rating: number; // 1-5
+  additionalKeywords?: string;
+}
+
+export interface ReviewGenerationResponse {
+  review: string;
+}
+
+const getToneInstruction = (tone: string): string => {
+  switch (tone) {
+    case "friendly":
+      return "친근하고 활발한 말투로 작성해주세요. 이모티콘이나 감탄사를 적절히 사용하세요.";
+    case "professional":
+      return "정중하고 객관적인 말투로 작성해주세요. 전문적이고 신뢰감 있는 표현을 사용하세요.";
+    case "simple":
+      return "간단명료한 말투로 작성해주세요. 핵심만 담아 짧고 명확하게 표현하세요.";
+    case "emotional":
+      return "감성적이고 따뜻한 말투로 작성해주세요. 개인적인 감정과 추억을 담아 표현하세요.";
+    default:
+      return "자연스럽고 일반적인 말투로 작성해주세요.";
+  }
+};
+
+const getSatisfactionLevel = (rating: number): string => {
+  switch (rating) {
+    case 1:
+      return "매우 불만족 (1점)";
+    case 2:
+      return "불만족 (2점)";
+    case 3:
+      return "보통 (3점)";
+    case 4:
+      return "만족 (4점)";
+    case 5:
+      return "매우 만족 (5점)";
+    default:
+      return "보통";
+  }
+};
+
+export const generateReview = async (
+  data: ReviewGenerationRequest
+): Promise<ReviewGenerationResponse> => {
+  const openaiApiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+
+  if (!openaiApiKey) {
+    throw new Error("OpenAI API 키가 설정되지 않았습니다.");
+  }
+
+  try {
+    // 메뉴 정보를 문자열로 변환
+    const menuInfo = data.menuItems
+      .map((item) => `${item.name} ${item.price.toLocaleString()}원`)
+      .join(", ");
+
+    // 말투별 프롬프트 설정
+    const toneInstruction = getToneInstruction(data.tone);
+
+    // 별점을 만족도로 변환
+    const satisfactionLevel = getSatisfactionLevel(data.rating);
+
+    // OpenAI 프롬프트 구성
+    let prompt = `다음 정보를 바탕으로 음식점 리뷰를 작성해주세요:
+
+식당명: ${data.restaurantName}
+주문 메뉴: ${menuInfo}
+만족도: ${satisfactionLevel}
+말투: ${data.tone}
+${toneInstruction}
+
+요구사항:
+- 실제 방문한 것처럼 생생하게 작성
+- 메뉴의 맛, 가격, 서비스에 대한 언급 포함
+- 100-200자 정도의 적당한 길이
+- 자연스럽고 진정성 있는 표현 사용`;
+
+    // 추가 키워드가 있으면 포함
+    if (data.additionalKeywords && data.additionalKeywords.trim()) {
+      prompt += `\n- 다음 키워드를 자연스럽게 포함: ${data.additionalKeywords}`;
+    }
+
+    // OpenAI API 호출
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${openaiApiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        max_tokens: 300,
+        temperature: 0.8,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `OpenAI API 오류: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const result = await response.json();
+    const generatedReview = result.choices[0].message.content.trim();
+
+    return { review: generatedReview };
+  } catch (error: any) {
+    console.error("OpenAI 리뷰 생성 중 오류:", error);
+    throw new Error(`리뷰 생성에 실패했습니다: ${error.message}`);
+  }
+};
+
 export default axiosInstance;

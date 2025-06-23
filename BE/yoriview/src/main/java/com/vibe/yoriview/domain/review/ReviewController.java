@@ -4,10 +4,13 @@ import com.vibe.yoriview.domain.review.dto.ReviewRequestDto;
 import com.vibe.yoriview.domain.review.dto.ReviewResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reviews")
@@ -60,5 +63,7 @@ public class ReviewController {
         String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return reviewService.findByUserId(userId, order);
     }
+
+
 
 }
