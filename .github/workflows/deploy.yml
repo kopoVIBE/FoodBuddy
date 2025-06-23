@@ -16,14 +16,81 @@ permissions:
   contents: read
 
 jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [backend, frontend]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Backend Build
+      - name: Set up JDK 17
+        if: matrix.service == 'backend'
+        uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Build Backend
+        if: matrix.service == 'backend'
+        working-directory: ./BE/yoriview
+        run: |
+          ./gradlew build -x test
+
+      - name: Upload Backend Artifact
+        if: matrix.service == 'backend'
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-build
+          path: BE/yoriview/build/libs/*.jar
+
+      # Frontend Build
+      - name: Set up Node.js
+        if: matrix.service == 'frontend'
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Build Frontend
+        if: matrix.service == 'frontend'
+        working-directory: ./FE/foodreviewapp
+        run: |
+          npm ci
+          npm run build
+
+      - name: Upload Frontend Artifact
+        if: matrix.service == 'frontend'
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-build
+          path: FE/foodreviewapp/.next
+
   deploy:
     name: Deploy
+    needs: build
     runs-on: ubuntu-latest
     environment: production
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      # Download artifacts
+      - name: Download Backend Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: backend-build
+          path: BE/yoriview/build/libs
+
+      - name: Download Frontend Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: frontend-build
+          path: FE/foodreviewapp/.next
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
