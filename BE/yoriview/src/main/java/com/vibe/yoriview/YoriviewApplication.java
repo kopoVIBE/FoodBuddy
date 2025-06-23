@@ -8,18 +8,24 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class YoriviewApplication {
 
     public static void main(String[] args) {
-        // .env 로딩
-        Dotenv dotenv = Dotenv.configure()
-                .load();  // 따로 directory() 지정 필요 없음
+        try {
+            // .env 파일이 없어도 에러가 발생하지 않도록 설정
+            Dotenv dotenv = Dotenv.configure()
+                    .ignoreIfMissing() // 이 옵션이 핵심: .env 파일이 없어도 에러가 발생하지 않음
+                    .load();
 
-        // 환경 변수 시스템 프로퍼티로 등록
-        System.setProperty("DB_USERNAME", dotenv.get("DB_USERNAME"));
-        System.setProperty("DB_PASSWORD", dotenv.get("DB_PASSWORD"));
-        System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
+            // 환경 변수가 있으면 사용하고, 없으면 docker-compose의 환경 변수 사용
+            if (dotenv != null) {
+                System.setProperty("DB_USERNAME", dotenv.get("DB_USERNAME"));
+                System.setProperty("DB_PASSWORD", dotenv.get("DB_PASSWORD"));
+                System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
+            }
 
-        // 확인용 로그
-        System.out.println("✅ .env 로딩 완료");
-        System.out.println("➡ DB_USERNAME = " + System.getProperty("DB_USERNAME"));
+            System.out.println("✅ 환경 설정 완료");
+
+        } catch (Exception e) {
+            System.out.println("⚠️ .env 파일 로딩 실패 (docker 환경 변수를 사용합니다): " + e.getMessage());
+        }
 
         SpringApplication.run(YoriviewApplication.class, args);
     }
