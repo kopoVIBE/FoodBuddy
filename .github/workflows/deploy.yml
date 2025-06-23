@@ -1,4 +1,4 @@
-name: Deploy to Amazon ECR
+name: 🚀 FoodBuddy 배포 파이프라인
 
 on:
   push:
@@ -24,58 +24,96 @@ permissions:
 
 jobs:
   deploy:
-    name: Deploy
+    name: 배포 작업
     runs-on: ubuntu-latest
     environment: production
 
     steps:
-      - name: Checkout
+      - name: 🧹 디스크 공간 확보
+        run: |
+          echo "📊 작업 시작 시간: $(date)"
+          echo "🔍 현재 브랜치: ${{ github.ref }}"
+
+          echo "💾 빌드 전 디스크 상태:"
+          df -h
+
+          echo "🧹 불필요한 파일 정리 중..."
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          docker system prune -af
+
+          echo "💾 정리 후 디스크 상태:"
+          df -h
+
+      - name: 📥 소스코드 체크아웃
         uses: actions/checkout@v3
 
-      - name: Configure AWS credentials
+      - name: 🔐 AWS 자격증명 설정
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to Amazon ECR
+      - name: 🔑 ECR 로그인
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build, tag, and push frontend image to Amazon ECR
+      - name: 🎨 프론트엔드 빌드 및 푸시
         id: build-frontend-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         working-directory: ./FE/foodreviewapp
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG .
+          echo "🏗️ 프론트엔드 빌드 시작: $(date)"
+          echo "📦 도커 이미지 태그: $IMAGE_TAG"
+
+          echo "🔨 도커 빌드 시작..."
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG . 2>&1 | tee frontend_build.log
+
+          echo "⬆️ ECR 푸시 시작..."
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG
+
+          echo "✅ 프론트엔드 빌드 완료: $(date)"
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG"
 
-      - name: Build, tag, and push backend image to Amazon ECR
+      - name: 🔧 백엔드 빌드 및 푸시
         id: build-backend-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         working-directory: ./BE/yoriview
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG .
+          echo "🏗️ 백엔드 빌드 시작: $(date)"
+          echo "📦 도커 이미지 태그: $IMAGE_TAG"
+
+          echo "🔨 도커 빌드 시작..."
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG . 2>&1 | tee backend_build.log
+
+          echo "⬆️ ECR 푸시 시작..."
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG
+
+          echo "✅ 백엔드 빌드 완료: $(date)"
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG"
 
-      - name: Deploy to EC2
+      - name: 🚀 EC2 배포
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.EC2_HOST }}
           username: ${{ env.EC2_USERNAME }}
           key: ${{ env.EC2_SSH_KEY }}
           script: |
+            echo "🎬 EC2 배포 시작: $(date)"
+
+            echo "📁 작업 디렉토리 생성"
             mkdir -p ~/foodbuddy
             cd ~/foodbuddy
 
-            # Create docker-compose.yml
+            echo "📝 docker-compose.yml 생성"
             cat > docker-compose.yml << 'EOL'
             version: '3.8'
 
@@ -121,16 +159,21 @@ jobs:
               mysql_data:
             EOL
 
-            # Set environment variables
+            echo "🔧 환경변수 설정"
             echo "ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}" > .env
             echo "ECR_REPOSITORY_FRONTEND=${{ env.ECR_REPOSITORY_FRONTEND }}" >> .env
             echo "ECR_REPOSITORY_BACKEND=${{ env.ECR_REPOSITORY_BACKEND }}" >> .env
             echo "IMAGE_TAG=${{ github.sha }}" >> .env
 
-            # Login to ECR
+            echo "🔑 ECR 로그인"
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
 
-            # Pull images and deploy
+            echo "🔄 컨테이너 재시작"
             docker-compose pull
             docker-compose down || true
             docker-compose up -d
+
+            echo "🔍 컨테이너 상태 확인"
+            docker ps
+
+            echo "✅ 배포 완료: $(date)"
