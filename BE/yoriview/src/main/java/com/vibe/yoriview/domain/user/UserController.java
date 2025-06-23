@@ -4,6 +4,7 @@ import com.vibe.yoriview.domain.user.dto.LoginRequestDto;
 import com.vibe.yoriview.domain.user.dto.LoginResponseDto;
 import com.vibe.yoriview.domain.user.dto.UserRequestDto;
 import com.vibe.yoriview.domain.user.dto.UserResponseDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +19,7 @@ public class UserController {
 
     // 회원가입
     @PostMapping("/register")
-    public UserResponseDto register(@RequestBody UserRequestDto dto) {
+    public UserResponseDto register(@Valid @RequestBody UserRequestDto dto) {
         return userService.register(dto);
     }
 
@@ -29,8 +30,8 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public LoginResponseDto login(@RequestBody LoginRequestDto dto) {
+    public LoginResponseDto login(@Valid @RequestBody LoginRequestDto dto) {
         return userService.login(dto);
     }
-
 }
+
