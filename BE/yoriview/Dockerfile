@@ -36,8 +36,7 @@ RUN ./gradlew clean assemble \
     --parallel \
     --build-cache \
     --no-daemon \
-    -x test \
-    -x integrationTest
+    -x test
 
 # ===== Stage 3: Runtime =====
 FROM eclipse-temurin:17-jre-alpine AS runtime

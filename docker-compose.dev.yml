@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+  mysql-dev:
+    image: mysql:8.0
+    container_name: foodbuddy-mysql-dev
+    environment:
+      MYSQL_ROOT_PASSWORD: dev_password
+      MYSQL_DATABASE: yoriview_dev
+      MYSQL_USER: dev_user
+      MYSQL_PASSWORD: dev_password
+    ports:
+      - "3307:3306" # 로컬 MySQL과 충돌 방지
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+      - ./Infra/mysql/init:/docker-entrypoint-initdb.d
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    networks:
+      - foodbuddy-dev
+
+  backend-dev:
+    build:
+      context: ./BE/yoriview
+      dockerfile: Dockerfile
+    container_name: foodbuddy-backend-dev
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-dev:3306/yoriview_dev
+      SPRING_DATASOURCE_USERNAME: dev_user
+      SPRING_DATASOURCE_PASSWORD: dev_password
+      JWT_SECRET: dev_jwt_secret_key_for_local_development_only
+      JWT_EXPIRATION: 86400000
+    ports:
+      - "8081:8080" # 로컬 포트 충돌 방지
+    depends_on:
+      - mysql-dev
+    volumes:
+      - ./BE/yoriview/src:/app/src # 코드 변경 시 핫리로드용
+    networks:
+      - foodbuddy-dev
+    restart: unless-stopped
+
+  frontend-dev:
+    build:
+      context: ./FE/food-review-app
+      dockerfile: Dockerfile
+    container_name: foodbuddy-frontend-dev
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:8081
+      NEXT_PUBLIC_APP_URL: http://localhost:3001
+    ports:
+      - "3001:3000" # 로컬 포트 충돌 방지
+    volumes:
+      - ./FE/food-review-app/src:/app/src # 코드 변경 시 핫리로드용
+      - ./FE/food-review-app/public:/app/public
+    networks:
+      - foodbuddy-dev
+    restart: unless-stopped
+
+volumes:
+  mysql_dev_data:
+
+networks:
+  foodbuddy-dev:
+    driver: bridge

@@ -46,26 +46,16 @@ ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
 
 # 🔧 Next.js 설정 파일 생성 (critters 오류 방지)
-RUN cat > next.config.mjs << 'EOF'
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  output: 'standalone',
-  eslint: { 
-    ignoreDuringBuilds: true 
-  },
-  typescript: { 
-    ignoreBuildErrors: true 
-  },
-  poweredByHeader: false,
-  compress: true,
-  swcMinify: true,
-  experimental: {
-    // optimizeCss 제거 - critters 의존성 문제 방지
-  }
-}
-
-export default nextConfig
-EOF
+RUN echo "const nextConfig = {" > next.config.mjs && \
+    echo "  output: 'standalone'," >> next.config.mjs && \
+    echo "  eslint: { ignoreDuringBuilds: true }," >> next.config.mjs && \
+    echo "  typescript: { ignoreBuildErrors: true }," >> next.config.mjs && \
+    echo "  poweredByHeader: false," >> next.config.mjs && \
+    echo "  compress: true," >> next.config.mjs && \
+    echo "  swcMinify: true" >> next.config.mjs && \
+    echo "};" >> next.config.mjs && \
+    echo "" >> next.config.mjs && \
+    echo "export default nextConfig;" >> next.config.mjs
 
 # 🚀 Next.js 빌드 실행 (에러 허용)
 RUN npm run build || (echo "⚠️ 빌드 경고가 있지만 계속 진행합니다" && npm run build -- --no-lint)
