@@ -1,0 +1,75 @@
+# 🔐 민감한 정보 및 환경변수 파일
+.env
+.env.local
+.env.production
+.env.development
+*.env
+
+# 🐳 Docker 관련
+docker-compose.override.yml
+.dockerignore
+
+# 🔑 인증서 및 키 파일
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+ssl/
+
+# 📊 로그 파일
+*.log
+logs/
+/logs/
+
+# 🧹 임시 파일
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# 💾 백업 파일
+*.bak
+*.backup
+backups/
+
+# 🔧 IDE 설정
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 📦 패키지 매니저 캐시
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# 🏗️ 빌드 결과물
+build/
+dist/
+out/
+target/
+
+# ☕ Java 관련
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+
+# 🎯 Next.js 관련
+.next/
+.vercel/
+
+# 🗄️ 데이터베이스 관련
+*.db
+*.sqlite
+*.sqlite3
+
+# 🚀 배포 관련
+deploy-config.json
+deployment-keys/ 

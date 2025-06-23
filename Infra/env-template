@@ -1,0 +1,109 @@
+# 🌍 FoodBuddy 환경변수 템플릿
+# 이 파일을 .env로 복사하여 사용하세요
+# cp env-template .env
+
+# ==========================================
+# 🎯 기본 환경 설정
+# ==========================================
+NODE_ENV=production  # production | development | test
+
+# ==========================================
+# 🗄️ 데이터베이스 설정 (MySQL)
+# ==========================================
+MYSQL_ROOT_PASSWORD=your_super_secure_root_password_here
+MYSQL_DATABASE=foodbuddy_db
+MYSQL_USER=foodbuddy_user
+MYSQL_PASSWORD=your_super_secure_user_password_here
+
+# ==========================================
+# 🔗 서비스 URL 설정
+# ==========================================
+BACKEND_URL=http://localhost:8080
+FRONTEND_URL=http://localhost:3000
+
+# 프로덕션 환경에서는 실제 도메인 사용
+# BACKEND_URL=https://api.foodbuddy.com
+# FRONTEND_URL=https://foodbuddy.com
+
+# ==========================================
+# 🐳 Docker 이미지 설정
+# ==========================================
+ECR_REGISTRY=268556604739.dkr.ecr.ap-northeast-2.amazonaws.com
+PROJECT_NAME=foodbuddy
+IMAGE_TAG=latest
+
+# ==========================================
+# 🔐 보안 설정
+# ==========================================
+# JWT 토큰 서명에 사용할 비밀키 (32자 이상 권장)
+JWT_SECRET=your-super-secret-jwt-signing-key-minimum-32-characters-long
+
+# JWT 토큰 만료 시간 (밀리초)
+# 86400000 = 24시간, 3600000 = 1시간
+JWT_EXPIRATION=86400000
+
+# ==========================================
+# 📊 모니터링 및 로깅 설정
+# ==========================================
+# Next.js 텔레메트리 비활성화 (성능 향상)
+NEXT_TELEMETRY_DISABLED=1
+
+# 로그 레벨 설정 (DEBUG | INFO | WARN | ERROR)
+LOG_LEVEL=INFO
+
+# ==========================================
+# ⚡ 성능 최적화 설정
+# ==========================================
+# Hibernate 배치 크기
+HIBERNATE_BATCH_SIZE=20
+
+# 데이터베이스 연결 풀 설정
+DB_CONNECTION_POOL_SIZE=10
+DB_CONNECTION_TIMEOUT=30000
+
+# ==========================================
+# 🌏 지역 및 시간대 설정
+# ==========================================
+TZ=Asia/Seoul
+LOCALE=ko_KR.UTF-8
+
+# ==========================================
+# 🚨 알림 설정 (선택사항)
+# ==========================================
+# Slack 웹훅 URL (배포 알림용)
+# SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
+
+# 이메일 SMTP 설정 (알림용)
+# SMTP_HOST=smtp.gmail.com
+# SMTP_PORT=587
+# SMTP_USER=your-email@gmail.com
+# SMTP_PASSWORD=your-app-password
+
+# ==========================================
+# 🔧 개발 환경 전용 설정
+# ==========================================
+# 개발 환경에서만 사용 (NODE_ENV=development일 때)
+DEBUG_MODE=false
+HOT_RELOAD=true
+
+# 데이터베이스 DDL 자동 업데이트 (개발 환경에서만 true 권장)
+HIBERNATE_DDL_AUTO=update  # create | create-drop | update | validate | none
+
+# ==========================================
+# 📝 설정 가이드
+# ==========================================
+# 1. 프로덕션 환경에서는 모든 패스워드를 강력한 값으로 변경하세요
+# 2. JWT_SECRET은 반드시 32자 이상의 랜덤 문자열로 설정하세요
+# 3. 데이터베이스 패스워드는 특수문자를 포함한 복잡한 값을 사용하세요
+# 4. 실제 도메인을 사용하는 경우 BACKEND_URL, FRONTEND_URL을 업데이트하세요
+# 5. 이 파일은 .gitignore에 포함되어 있으므로 Git에 커밋되지 않습니다
+
+# ==========================================
+# 🔐 보안 체크리스트
+# ==========================================
+# ✅ 모든 기본 패스워드 변경됨
+# ✅ JWT_SECRET이 32자 이상으로 설정됨
+# ✅ 데이터베이스 패스워드가 강력함
+# ✅ 프로덕션 환경에서 DEBUG_MODE=false
+# ✅ HTTPS 사용 (프로덕션 환경)
+# ✅ 환경변수 파일이 .gitignore에 포함됨 
