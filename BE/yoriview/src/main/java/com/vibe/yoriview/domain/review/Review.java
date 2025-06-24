@@ -27,7 +27,7 @@ public class Review {
     @Column(name = "receipt_id", length = 36, nullable = false)
     private String receiptId;
 
-    @Column(name = "style_id", length = 10, nullable = false)
+    @Column(name = "style_id", length = 200, nullable = false)
     private String styleId;
 
     @Column(name = "restaurant_id", length = 36, nullable = false)
