@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Download } from "lucide-react";
+import { Download, Star } from "lucide-react";
 import Image from "next/image";
 import ReviewModal from "@/components/review-modal";
 import { useApp } from "@/contexts/app-context";
@@ -50,6 +50,7 @@ export default function WritePage() {
   const [ocrCompleted, setOcrCompleted] = useState(false);
   const [ocrResult, setOcrResult] = useState<OCRResult | null>(null);
   const [isProcessingOCR, setIsProcessingOCR] = useState(false);
+  const [rating, setRating] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // OCR API 호출 함수 (Spring Boot 백엔드)
@@ -88,18 +89,40 @@ export default function WritePage() {
     }
   };
 
+  const resizeImage = (file: File, maxWidth: number = 800, quality: number = 0.7): Promise<string> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d')!;
+      const img = new window.Image();
+
+      img.onload = () => {
+        // 비율 유지하면서 크기 조정
+        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+
+        // 이미지 그리기
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Base64로 변환 (JPEG, 품질 70%)
+        const resizedBase64 = canvas.toDataURL('image/jpeg', quality);
+        resolve(resizedBase64);
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setUploadedImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      // 이미지 크기 조정
+      const resizedImage = await resizeImage(file);
+      setUploadedImage(resizedImage);
 
-      // OCR 처리 시작
+      // OCR 처리 시작 (원본 파일 사용)
       await processOCR(file);
 
       // OCR 처리 완료 후 모달 표시
@@ -130,6 +153,16 @@ export default function WritePage() {
       alert("말투를 선택해주세요!");
       return;
     }
+    if (!rating) {
+      alert("별점을 선택해주세요!");
+      return;
+    }
+
+    // 바로 리뷰 생성으로 이동
+    await generateReviewContent();
+  };
+
+  const generateReviewContent = async () => {
     if (!ocrResult) {
       alert("영수증 정보가 없습니다!");
       return;
@@ -145,7 +178,7 @@ export default function WritePage() {
         restaurantName: ocrResult.restaurantName,
         menuItems: ocrResult.items,
         tone: selectedTone,
-        rating: 4, // 기본값으로 4점 설정 (나중에 사용자 입력으로 변경 가능)
+        rating: rating,
         additionalKeywords: additionalWords.trim() || undefined,
       };
 
@@ -190,6 +223,10 @@ export default function WritePage() {
     setShowModal(false);
   };
 
+  const handleRatingFromModal = (modalRating: number) => {
+    setRating(modalRating);
+  };
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(generatedReview);
     alert("리뷰가 클립보드에 복사되었습니다!");
@@ -206,28 +243,31 @@ export default function WritePage() {
       const ocrMenuItems = ocrResult.items.map((item) => ({
         name: item.name,
         price: item.price,
-        quantity: 1, // 기본값
+        quantity: 1,
       }));
+
+      // Base64 데이터에서 prefix 제거
+      const base64Data = uploadedImage ? uploadedImage.split(',')[1] : '';
 
       // 통합 리뷰 저장 요청 데이터 구성
       const reviewData: CompleteReviewRequest = {
         // OCR 정보
         ocrRestaurantName: ocrResult.restaurantName,
         ocrAddress: ocrResult.address || "",
-        originalImg: uploadedImage || "", // base64 이미지 데이터 저장 (TEXT 컬럼으로 변경됨)
-        receiptDate: new Date().toISOString().split("T")[0], // 오늘 날짜를 임시로 사용
+        originalImg: base64Data, // prefix 제거된 Base64 데이터만 저장
+        receiptDate: new Date().toISOString().split("T")[0],
         ocrMenuItems: ocrMenuItems,
 
-        // 식당 정보 (OCR 정보를 기본값으로 사용)
+        // 식당 정보
         restaurantName: ocrResult.restaurantName,
-        restaurantCategory: "일반음식점", // 기본값
+        restaurantCategory: "일반음식점",
         restaurantAddress: ocrResult.address || "",
-        locationId: "SEOUL", // 기본값 (10자 이내로 변경)
+        locationId: "SEOUL",
 
         // 리뷰 정보
         styleId: selectedTone,
         reviewContent: generatedReview,
-        rating: 4.0, // 기본값 (나중에 사용자 입력으로 변경 가능)
+        rating: rating,
       };
 
       console.log("리뷰 저장 요청:", reviewData);
@@ -240,7 +280,7 @@ export default function WritePage() {
           `리뷰가 성공적으로 저장되었습니다!\n리뷰 ID: ${response.reviewId}`
         );
 
-        // 저장 성공 후 초기화 (선택사항)
+        // 저장 성공 후 초기화
         setShowGeneratedReview(false);
         setGeneratedReview("");
         setUploadedImage(null);
@@ -248,6 +288,7 @@ export default function WritePage() {
         setSelectedTone("");
         setOcrCompleted(false);
         setAdditionalWords("");
+        setRating(0);
 
         console.log("저장된 리뷰 정보:", response);
       } else {
@@ -378,7 +419,7 @@ export default function WritePage() {
           {/* 다음 단계 버튼 */}
           <Button
             onClick={handleNext}
-            disabled={!uploadedImage || !selectedTone || !ocrCompleted}
+            disabled={!uploadedImage || !selectedTone || !ocrCompleted || !rating}
             className="w-full bg-[#FF5722] hover:bg-[#E64A19] text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
             다음 단계
@@ -411,14 +452,6 @@ export default function WritePage() {
                   </li>
                 ))}
               </ul>
-              {ocrResult.text && (
-                <div>
-                  <strong>원본 텍스트:</strong>
-                  <pre className="mt-1 p-2 bg-white rounded text-xs whitespace-pre-wrap">
-                    {ocrResult.text}
-                  </pre>
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -427,7 +460,7 @@ export default function WritePage() {
         {showGeneratedReview && (
           <div className="space-y-4">
             <h3 className="font-medium flex items-center gap-2 text-gray-900">
-              ✨ {t("generatedReview")}
+              ✨ {t("generatedReview")} (별점: {rating}점)
             </h3>
 
             {/* 수정 가능한 회색 텍스트 영역 */}
@@ -478,6 +511,7 @@ export default function WritePage() {
         ocrResult={ocrResult}
         isProcessingOCR={isProcessingOCR}
         onComplete={handleModalComplete}
+        onRatingChange={handleRatingFromModal}
       />
     </div>
   );

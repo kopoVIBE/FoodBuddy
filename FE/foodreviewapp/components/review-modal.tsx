@@ -24,6 +24,7 @@ interface ReviewModalProps {
   ocrResult?: OCRResult | null;
   isProcessingOCR?: boolean;
   onComplete?: () => void;
+  onRatingChange?: (rating: number) => void;
 }
 
 export default function ReviewModal({
@@ -35,6 +36,7 @@ export default function ReviewModal({
   ocrResult,
   isProcessingOCR,
   onComplete,
+  onRatingChange,
 }: ReviewModalProps) {
   const [rating, setRating] = useState(0);
 
@@ -84,6 +86,7 @@ export default function ReviewModal({
   // 별점 완료 시
   const handleRatingComplete = () => {
     onComplete?.();
+    onRatingChange?.(rating);
   };
 
   // 메뉴 항목 추가
