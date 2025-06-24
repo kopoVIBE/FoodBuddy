@@ -348,6 +348,18 @@ export const getMyReviews = async (order: string = "latest"): Promise<MyReviewRe
   return response.data;
 };
 
+// 리뷰 삭제 API
+export const deleteReview = async (reviewId: string): Promise<void> => {
+  try {
+    console.log('리뷰 삭제 요청:', reviewId);
+    await axiosInstance.delete(`/api/reviews/${reviewId}`);
+    console.log('리뷰 삭제 성공:', reviewId);
+  } catch (error) {
+    console.error('리뷰 삭제 실패:', error);
+    throw error;
+  }
+};
+
 // 즐겨찾기 관련 API
 export interface FavoriteResponse {
   favoriteId: string;

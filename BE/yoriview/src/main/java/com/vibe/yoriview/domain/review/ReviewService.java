@@ -7,6 +7,7 @@ import com.vibe.yoriview.domain.restaurant.RestaurantRepository;
 import com.vibe.yoriview.domain.receipt.ReceiptRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -117,6 +118,7 @@ public class ReviewService {
         return ReviewResponseDto.from(review);
     }
 
+    @Transactional
     public void deleteReview(String reviewId, String userId) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));

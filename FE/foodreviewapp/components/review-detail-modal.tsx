@@ -17,6 +17,7 @@ interface Review {
   tags: string[]
   isFavorite: boolean
   restaurantId?: string // 즐겨찾기 기능을 위해 추가
+  reviewId?: string // 리뷰 삭제를 위해 추가
 }
 
 interface ReviewDetailModalProps {
@@ -25,6 +26,7 @@ interface ReviewDetailModalProps {
   review: Review | null
   onShare: (title: string, content: string) => void
   onFavoriteToggle?: (restaurantId: string, isFavorited: boolean) => Promise<void>
+  onDelete?: (reviewId: string) => Promise<void>
   className?: string
 }
 
@@ -34,10 +36,12 @@ export default function ReviewDetailModal({
   review,
   onShare,
   onFavoriteToggle,
+  onDelete,
   className = "",
 }: ReviewDetailModalProps) {
   const [isFavorited, setIsFavorited] = useState(false)
   const [isToggling, setIsToggling] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     if (review) {
@@ -62,6 +66,24 @@ export default function ReviewDetailModal({
       console.error("즐겨찾기 토글 실패:", error)
     } finally {
       setIsToggling(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!review.reviewId || !onDelete || isDeleting) return
+
+    // 삭제 확인 대화상자
+    if (!confirm("정말 이 리뷰를 삭제하시겠습니까?")) return
+
+    try {
+      setIsDeleting(true)
+      await onDelete(review.reviewId)
+      onClose() // 삭제 후 모달 닫기
+    } catch (error) {
+      console.error("리뷰 삭제 실패:", error)
+      alert("리뷰 삭제에 실패했습니다. 다시 시도해주세요.")
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -161,9 +183,11 @@ export default function ReviewDetailModal({
           <Button
             variant="outline"
             className="flex-1 bg-white border border-[#EB4C34] text-[#EB4C34] hover:bg-[#EB4C34]/10 rounded-[10px]"
+            onClick={handleDelete}
+            disabled={isDeleting}
           >
             <Trash2 className="h-4 w-4 mr-2" />
-            삭제
+            {isDeleting ? "삭제 중..." : "삭제"}
           </Button>
         </div>
       </div>

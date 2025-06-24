@@ -18,7 +18,8 @@ import {
   getMyFavoriteRestaurants,
   FavoriteRestaurantInfo,
   addFavorite,
-  removeFavorite
+  removeFavorite,
+  deleteReview
 } from "@/lib/api";
 
 // 임시 데이터
@@ -274,6 +275,7 @@ export default function HomePage() {
         isFavorite: isFavorited,
         receiptImage: imageUrl,
         restaurantId: review.restaurantId, // 즐겨찾기 기능을 위해 추가
+        reviewId: review.reviewId, // 리뷰 삭제를 위해 추가
       };
     });
     console.log("변환된 리뷰 데이터:", formatted);
@@ -793,6 +795,19 @@ export default function HomePage() {
             await fetchFavoriteRestaurants();
           } catch (error) {
             console.error("즐겨찾기 토글 실패:", error);
+            throw error;
+          }
+        }}
+        onDelete={async (reviewId: string) => {
+          try {
+            console.log('리뷰 삭제 시작:', reviewId);
+            await deleteReview(reviewId);
+            console.log('리뷰 삭제 완료');
+            // 리뷰 목록 새로고침
+            await fetchMyReviews();
+            await fetchFavoriteRestaurants();
+          } catch (error) {
+            console.error("리뷰 삭제 실패:", error);
             throw error;
           }
         }}
