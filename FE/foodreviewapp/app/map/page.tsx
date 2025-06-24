@@ -28,8 +28,14 @@ console.log("환경변수 전체:", {
 });
 console.log("========================");
 
-// 🔍 환경 진단 함수
+// 🔍 환경 진단 함수 (클라이언트 사이드에서만 실행)
 const diagnoseEnvironment = () => {
+  // 🛡️ 서버 사이드 렌더링 방지
+  if (typeof window === "undefined") {
+    console.log("🔄 서버 사이드에서는 환경 진단 건너뜀");
+    return;
+  }
+
   console.log("\n🔍 === 환경 진단 시작 ===");
 
   // 1. 브라우저 환경 체크
@@ -58,8 +64,10 @@ const diagnoseEnvironment = () => {
   console.log("=== 환경 진단 완료 ===\n");
 };
 
-// 🚀 즉시 진단 실행
-diagnoseEnvironment();
+// 🚀 클라이언트 사이드에서만 진단 실행
+if (typeof window !== "undefined") {
+  diagnoseEnvironment();
+}
 
 const visitedRestaurants = [
   {
