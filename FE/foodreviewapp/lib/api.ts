@@ -229,39 +229,42 @@ ${toneInstruction}
   }
 };
 
-// 통합 리뷰 저장 API
-export interface CompleteReviewRequest {
-  // OCR 정보
-  ocrRestaurantName: string;
-  ocrAddress?: string;
-  originalImg?: string;
-  receiptDate?: string;
-  ocrMenuItems: Array<{ name: string; price: number; quantity?: number }>;
-
-  // 식당 정보
-  restaurantName: string;
-  restaurantCategory?: string;
-  restaurantAddress: string;
-  locationId?: string;
-
-  // 리뷰 정보
-  styleId: string;
-  reviewContent: string;
-  rating: number;
+// 사용자 정보 수정 관련 타입 정의
+export interface UserUpdateData {
+  nickname: string;
+  defaultStyleId?: string;
 }
 
-export interface CompleteReviewResponse {
-  success: boolean;
-  reviewId: string;
-  receiptId: string;
-  restaurantId: string;
-  message: string;
+export interface PasswordChangeData {
+  currentPassword: string;
+  newPassword: string;
 }
 
-export const saveCompleteReview = async (
-  data: CompleteReviewRequest
-): Promise<CompleteReviewResponse> => {
-  const response = await axiosInstance.post("/api/reviews/complete", data);
+export interface UserInfoResponse {
+  userId: string;
+  email: string;
+  nickname: string;
+  defaultStyleId: string;
+  locationEnabled: string;
+  reviewVisibility: string;
+  createdAt: string;
+}
+
+// 사용자 정보 조회 API
+export const getUserInfo = async (): Promise<UserInfoResponse> => {
+  const response = await axiosInstance.get("/api/users/me");
+  return response.data;
+};
+
+// 사용자 정보 수정 API (닉네임)
+export const updateUserInfo = async (data: UserUpdateData): Promise<UserInfoResponse> => {
+  const response = await axiosInstance.put("/api/users/me", data);
+  return response.data;
+};
+
+// 비밀번호 변경 API
+export const changePassword = async (data: PasswordChangeData): Promise<string> => {
+  const response = await axiosInstance.put("/api/users/password", data);
   return response.data;
 };
 
