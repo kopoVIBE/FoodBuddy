@@ -11,8 +11,55 @@ declare global {
   }
 }
 
-// 🔑 하드코딩된 API 키
+// 🔑 카카오맵 API 키 (디버깅용 로그 추가)
 const KAKAO_JS_KEY = process.env.NEXT_PUBLIC_KAKAO_JAVA_SCRIPT_KEY;
+
+// 🐛 디버깅용 로그
+console.log("=== 카카오맵 디버깅 정보 ===");
+console.log(
+  "KAKAO_JS_KEY:",
+  KAKAO_JS_KEY ? `${KAKAO_JS_KEY.substring(0, 8)}...` : "undefined"
+);
+console.log("KAKAO_JS_KEY 전체:", KAKAO_JS_KEY);
+console.log("환경변수 전체:", {
+  NODE_ENV: process.env.NODE_ENV,
+  NEXT_PUBLIC_KAKAO_JAVA_SCRIPT_KEY:
+    process.env.NEXT_PUBLIC_KAKAO_JAVA_SCRIPT_KEY,
+});
+console.log("========================");
+
+// 🔍 환경 진단 함수
+const diagnoseEnvironment = () => {
+  console.log("\n🔍 === 환경 진단 시작 ===");
+
+  // 1. 브라우저 환경 체크
+  console.log("1️⃣ 브라우저 환경:");
+  console.log("- User Agent:", navigator.userAgent);
+  console.log("- 온라인 상태:", navigator.onLine ? "온라인" : "오프라인");
+  console.log("- HTTPS:", window.location.protocol === "https:" ? "✅" : "❌");
+
+  // 2. API 키 상태
+  console.log("\n2️⃣ API 키 상태:");
+  console.log("- API 키 존재:", KAKAO_JS_KEY ? "✅" : "❌");
+  console.log("- API 키 길이:", KAKAO_JS_KEY ? KAKAO_JS_KEY.length : 0);
+  console.log(
+    "- API 키 형식:",
+    KAKAO_JS_KEY ? (KAKAO_JS_KEY.length > 10 ? "✅" : "❌ 너무 짧음") : "❌"
+  );
+
+  // 3. 지리적 위치 API
+  console.log("\n3️⃣ 지리적 위치 API:");
+  console.log("- Geolocation 지원:", navigator.geolocation ? "✅" : "❌");
+
+  // 4. DOM 상태
+  console.log("\n4️⃣ DOM 상태:");
+  console.log("- Document Ready:", document.readyState);
+
+  console.log("=== 환경 진단 완료 ===\n");
+};
+
+// 🚀 즉시 진단 실행
+diagnoseEnvironment();
 
 const visitedRestaurants = [
   {
@@ -119,88 +166,139 @@ export default function MapPage() {
   const mapContainer = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    console.log("🗺️ 위치 정보 요청 시작");
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) =>
+        (pos) => {
+          console.log("✅ 위치 정보 성공:", {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          });
           setCurrentLocation({
             lat: pos.coords.latitude,
             lng: pos.coords.longitude,
-          }),
-        () => console.log("위치 정보를 불러오지 못해 기본 좌표 사용")
+          });
+        },
+        (error) => {
+          console.error("❌ 위치 정보 오류:", error);
+          console.log("위치 정보를 불러오지 못해 기본 좌표 사용 (서울 중심)");
+        }
       );
+    } else {
+      console.log("❌ Geolocation API 지원하지 않음");
     }
   }, []);
 
   useEffect(() => {
+    console.log("🔄 카카오맵 스크립트 로딩 시작");
+    console.log("현재 위치:", currentLocation);
+
+    // API 키 검증
+    if (!KAKAO_JS_KEY) {
+      console.error("❌ 카카오맵 API 키가 없습니다!");
+      return;
+    }
+
     const script = document.createElement("script");
     script.async = true;
     script.src = `//dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey=${KAKAO_JS_KEY}`;
+
+    console.log("📥 스크립트 URL:", script.src);
     document.head.appendChild(script);
 
     script.onload = () => {
+      console.log("✅ 카카오맵 스크립트 로드 완료");
+
+      if (!window.kakao) {
+        console.error("❌ window.kakao 객체가 없습니다!");
+        return;
+      }
+
       window.kakao.maps.load(() => {
-        if (!mapContainer.current) return;
+        console.log("🗺️ 카카오맵 SDK 초기화 완료");
 
-        const kakaoMap = new window.kakao.maps.Map(mapContainer.current, {
-          center: new window.kakao.maps.LatLng(
-            currentLocation.lat,
-            currentLocation.lng
-          ),
-          level: 4,
-        });
-        setMap(kakaoMap);
+        if (!mapContainer.current) {
+          console.error("❌ 맵 컨테이너가 없습니다!");
+          return;
+        }
 
-        new window.kakao.maps.Marker({
-          map: kakaoMap,
-          position: new window.kakao.maps.LatLng(
-            currentLocation.lat,
-            currentLocation.lng
-          ),
-          image: new window.kakao.maps.MarkerImage(
-            "data:image/svg+xml;base64," +
-              btoa(`<svg width="20" height="20" viewBox="0 0 20 20"
-            xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="8" fill="#007AFF"
-            stroke="white" stroke-width="2"/></svg>`),
-            new window.kakao.maps.Size(20, 20)
-          ),
-        });
+        try {
+          const kakaoMap = new window.kakao.maps.Map(mapContainer.current, {
+            center: new window.kakao.maps.LatLng(
+              currentLocation.lat,
+              currentLocation.lng
+            ),
+            level: 4,
+          });
+          console.log("✅ 카카오맵 생성 성공!");
+          setMap(kakaoMap);
 
-        visitedRestaurants.forEach((r) => {
-          const marker = new window.kakao.maps.Marker({
+          new window.kakao.maps.Marker({
             map: kakaoMap,
-            position: new window.kakao.maps.LatLng(r.lat, r.lng),
+            position: new window.kakao.maps.LatLng(
+              currentLocation.lat,
+              currentLocation.lng
+            ),
             image: new window.kakao.maps.MarkerImage(
               "data:image/svg+xml;base64," +
-                btoa(`<svg width="32" height="32" viewBox="0 0 32 32"
-              xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#FF4444"
-              opacity="0.9"/><path d="M16 6l2.5 7.5h7.5l-6 4.5 2.5 7.5-6-4.5-6 4.5 2.5-7.5-6-4.5h7.5z"
-              fill="white"/></svg>`),
-              new window.kakao.maps.Size(32, 32),
-              { offset: new window.kakao.maps.Point(16, 16) }
+                btoa(`<svg width="20" height="20" viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="8" fill="#007AFF"
+              stroke="white" stroke-width="2"/></svg>`),
+              new window.kakao.maps.Size(20, 20)
             ),
           });
+          console.log("✅ 현재 위치 마커 생성 완료");
 
-          const info = new window.kakao.maps.InfoWindow({
-            content: `<div style="padding:8px;text-align:center;font-size:12px">
-                        <b>${r.name}</b><br/><span style="color:#666;font-size:11px">${r.date}</span>
-                      </div>`,
+          visitedRestaurants.forEach((r, index) => {
+            const marker = new window.kakao.maps.Marker({
+              map: kakaoMap,
+              position: new window.kakao.maps.LatLng(r.lat, r.lng),
+              image: new window.kakao.maps.MarkerImage(
+                "data:image/svg+xml;base64," +
+                  btoa(`<svg width="32" height="32" viewBox="0 0 32 32"
+                xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="#FF4444"
+                opacity="0.9"/><path d="M16 6l2.5 7.5h7.5l-6 4.5 2.5 7.5-6-4.5-6 4.5 2.5-7.5-6-4.5h7.5z"
+                fill="white"/></svg>`),
+                new window.kakao.maps.Size(32, 32),
+                { offset: new window.kakao.maps.Point(16, 16) }
+              ),
+            });
+
+            const info = new window.kakao.maps.InfoWindow({
+              content: `<div style="padding:8px;text-align:center;font-size:12px">
+                          <b>${r.name}</b><br/><span style="color:#666;font-size:11px">${r.date}</span>
+                        </div>`,
+            });
+            window.kakao.maps.event.addListener(marker, "click", () =>
+              info.open(kakaoMap, marker)
+            );
+
+            if (index === 0)
+              console.log(
+                `✅ 음식점 마커 생성 시작 (총 ${visitedRestaurants.length}개)`
+              );
           });
-          window.kakao.maps.event.addListener(marker, "click", () =>
-            info.open(kakaoMap, marker)
-          );
-        });
+          console.log("✅ 모든 음식점 마커 생성 완료");
 
-        const updateVisible = () => {
-          const bounds = kakaoMap.getBounds();
-          const list = visitedRestaurants.filter((r) =>
-            bounds.contain(new window.kakao.maps.LatLng(r.lat, r.lng))
-          );
-          setVisibleList(list);
-        };
+          const updateVisible = () => {
+            const bounds = kakaoMap.getBounds();
+            const list = visitedRestaurants.filter((r) =>
+              bounds.contain(new window.kakao.maps.LatLng(r.lat, r.lng))
+            );
+            setVisibleList(list);
+          };
 
-        updateVisible();
-        window.kakao.maps.event.addListener(kakaoMap, "idle", updateVisible);
+          updateVisible();
+          window.kakao.maps.event.addListener(kakaoMap, "idle", updateVisible);
+          console.log("🎯 카카오맵 초기화 완전히 완료!");
+        } catch (error) {
+          console.error("❌ 카카오맵 생성 중 오류:", error);
+        }
       });
+    };
+
+    script.onerror = (error) => {
+      console.error("❌ 카카오맵 스크립트 로드 실패:", error);
     };
 
     return () => {
