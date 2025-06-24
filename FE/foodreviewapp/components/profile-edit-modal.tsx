@@ -11,15 +11,17 @@ import { useApp } from "@/contexts/app-context";
 interface ProfileEditModalProps {
   isOpen: boolean;
   onClose: () => void;
+  nickname?: string;
 }
 
 export default function ProfileEditModal({
   isOpen,
   onClose,
+  nickname,
 }: ProfileEditModalProps) {
   const { isDarkMode } = useApp();
   const [profileData, setProfileData] = useState({
-    name: "푸드러버",
+    name: nickname || "", // null, undefined, 빈 문자열 모두 처리
     password: "",
     confirmPassword: "",
   });

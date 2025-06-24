@@ -165,16 +165,17 @@ export default function SettingsPage() {
 
             {/* 로그아웃 버튼 */}
             <div className="pt-2">
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  logout();
-                  router.replace("/auth");
-                }}
-                className="w-full"
-              >
-                로그아웃
-              </Button>
+            <Button
+  onClick={() => {
+    logout();
+    router.replace("/auth");
+  }}
+  className="w-full text-white font-semibold hover:opacity-90"
+  style={{ backgroundColor: "#EB4C34" }}
+>
+  로그아웃
+</Button>
+
             </div>
           </CardContent>
         </Card>
@@ -184,6 +185,7 @@ export default function SettingsPage() {
       <ProfileEditModal
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}
+        nickname={nickname ?? ""}
       />
     </div>
   );
