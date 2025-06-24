@@ -1,4 +1,4 @@
-FROM gradle:8.5-jdk17 as builder
+FROM gradle:8.5-jdk17 AS builder
 
 WORKDIR /app
 COPY . .
@@ -17,10 +17,10 @@ WORKDIR /app
 # JAR 파일 복사
 COPY --from=builder /app/build/libs/*.jar app.jar
 
-# OCR 디렉토리 생성 및 파일 복사 (경로 수정)
+# OCR 디렉토리 구조 설정
 RUN mkdir -p /app/ocr/input /app/ocr/output
-COPY --from=builder /app/BE/yoriview/ocr/ocr-parser.py /app/ocr/
-COPY --from=builder /app/BE/yoriview/ocr/.env /app/ocr/
+COPY --from=builder /app/ocr/ocr-parser.py /app/ocr/
+COPY --from=builder /app/ocr/.env /app/ocr/
 
 # Python 패키지 설치
 RUN pip3 install python-dotenv requests google-generativeai
