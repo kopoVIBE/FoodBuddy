@@ -53,6 +53,7 @@ jobs:
           echo "📦 도커 이미지 태그: $IMAGE_TAG"
           docker build \
             --build-arg NEXT_PUBLIC_LOCAL_BACK_URL=${{ secrets.NEXT_PUBLIC_LOCAL_BACK_URL }} \
+            --build-arg NEXT_PUBLIC_KAKAO_JAVA_SCRIPT_KEY=${{ secrets.NEXT_PUBLIC_KAKAO_JAVA_SCRIPT_KEY }} \
             -t $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG . 2>&1 | tee frontend_build.log
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG
           echo "✅ 프론트엔드 빌드 완료: $(date)"
