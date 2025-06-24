@@ -45,7 +45,7 @@ export default function ReviewDetailModal({
       <div className="relative w-full max-w-md bg-white rounded-2xl overflow-hidden animate-in zoom-in-95 duration-300">
         {/* 헤더 */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="text-lg font-semibold">리뷰 상세</h3>
+          <h3 className="text-lg font-semibold"></h3>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-5 w-5" />
           </Button>
@@ -104,14 +104,13 @@ export default function ReviewDetailModal({
 
             {/* 리뷰 내용 */}
             <div>
-              <h5 className="font-medium text-gray-900 mb-2">리뷰</h5>
               <p className="text-gray-700 leading-relaxed">{review.content}</p>
             </div>
           </div>
         </div>
 
         {/* 하단 버튼 */}
-        <div className="p-4 bg-gray-50 flex gap-2">
+        <div className="p-4 bg-white flex gap-2">
           <Button className="flex-1 bg-[#EB4C34] hover:bg-[#d63e2a] text-white rounded-[10px]" onClick={handleShare}>
             <Share2 className="h-4 w-4 mr-2" />
             공유

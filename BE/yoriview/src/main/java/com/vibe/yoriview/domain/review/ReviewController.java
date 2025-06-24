@@ -1,13 +1,18 @@
 package com.vibe.yoriview.domain.review;
 
+import com.vibe.yoriview.domain.review.dto.CompleteReviewRequestDto;
+import com.vibe.yoriview.domain.review.dto.CompleteReviewResponseDto;
 import com.vibe.yoriview.domain.review.dto.ReviewRequestDto;
 import com.vibe.yoriview.domain.review.dto.ReviewResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reviews")
@@ -15,6 +20,7 @@ import java.util.List;
 public class ReviewController {
 
     private final ReviewService reviewService;
+    private final CompleteReviewService completeReviewService;
 
     // 리뷰 등록
     @PostMapping
@@ -59,6 +65,14 @@ public class ReviewController {
     ) {
         String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return reviewService.findByUserId(userId, order);
+    }
+
+    // 통합 리뷰 저장 (OCR + 식당 + 리뷰 + 스타일)
+    @PostMapping("/complete")
+    public ResponseEntity<CompleteReviewResponseDto> saveCompleteReview(@Valid @RequestBody CompleteReviewRequestDto dto) {
+        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CompleteReviewResponseDto response = completeReviewService.saveCompleteReview(dto, userId);
+        return ResponseEntity.ok(response);
     }
 
 }

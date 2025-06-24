@@ -17,9 +17,19 @@ import { User, Bell, Palette } from "lucide-react";
 import { useApp } from "@/contexts/app-context";
 import ProfileEditModal from "@/components/profile-edit-modal";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
-  const { t, isDarkMode, language, toggleDarkMode, setLanguage } = useApp();
+  const router = useRouter();
+  const {
+    t,
+    isDarkMode,
+    language,
+    nickname,
+    toggleDarkMode,
+    setLanguage,
+    logout,
+  } = useApp();
   const [notifications, setNotifications] = useState(true);
   const [autoShare, setAutoShare] = useState(false);
   const [defaultStyle, setDefaultStyle] = useState("casual");
@@ -35,21 +45,8 @@ export default function SettingsPage() {
       }`}
     >
       <div className="max-w-md mx-auto px-4 py-6 space-y-6">
-        {/* 프로필 섹션 */}
-        <Card className={isDarkMode ? "bg-gray-800 border-gray-700" : ""}>
-          <CardHeader>
-            <CardTitle
-              className={`flex items-center gap-2 ${
-                isDarkMode ? "text-white" : ""
-              }`}
-            >
-              <User className="h-5 w-5" />
-              프로필
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-[#EB4C3420] rounded-full flex items-center justify-center">
+      <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-[#FFF6EA] rounded-full flex items-center justify-center">
                 <Image
                   src="/logo.svg"
                   alt="프로필"
@@ -60,120 +57,31 @@ export default function SettingsPage() {
               </div>
               <div className="flex-1">
                 <h3 className={`font-medium ${isDarkMode ? "text-white" : ""}`}>
-                  푸드러버
+                  {nickname || "게스트"}
                 </h3>
                 <p
                   className={`text-sm ${
                     isDarkMode ? "text-gray-300" : "text-gray-600"
                   }`}
                 >
-                  foodlover@example.com
+                  {nickname
+                    ? `${nickname}@foodbuddy.com`
+                    : "로그인이 필요합니다"}
                 </p>
               </div>
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowProfileModal(true)}
-                className={
-                  isDarkMode
-                    ? "border-gray-600 text-gray-300 hover:bg-gray-700"
-                    : ""
-                }
-              >
-                편집
-              </Button>
+  size="sm"
+  onClick={() => setShowProfileModal(true)}
+  className="h-[22px] px-3 bg-[#BCBCBC] hover:bg-gray-300 text-white text-[12px] font-medium rounded-[10px]"
+>
+  수정
+</Button>
+
             </div>
-          </CardContent>
-        </Card>
-
-        {/* 알림 설정 */}
-        <Card className={isDarkMode ? "bg-gray-800 border-gray-700" : ""}>
-          <CardHeader>
-            <CardTitle
-              className={`flex items-center gap-2 ${
-                isDarkMode ? "text-white" : ""
-              }`}
-            >
-              <Bell className="h-5 w-5" />
-              알림 설정
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className={isDarkMode ? "text-white" : ""}>
-                  앱 알림
-                </Label>
-                <p
-                  className={`text-sm ${
-                    isDarkMode ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  앱 내 일반 알림 설정
-                </p>
-              </div>
-              <Switch
-                checked={notifications}
-                onCheckedChange={setNotifications}
-              />
-            </div>
-
-            <Separator className={isDarkMode ? "bg-gray-700" : ""} />
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className={isDarkMode ? "text-white" : ""}>
-                  리뷰 리마인더
-                </Label>
-                <p
-                  className={`text-sm ${
-                    isDarkMode ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  방문한 음식점 리뷰 작성 알림
-                </p>
-              </div>
-              <Switch
-                checked={reviewReminder}
-                onCheckedChange={setReviewReminder}
-              />
-            </div>
-
-            <Separator className={isDarkMode ? "bg-gray-700" : ""} />
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className={isDarkMode ? "text-white" : ""}>
-                  추천 알림
-                </Label>
-                <p
-                  className={`text-sm ${
-                    isDarkMode ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  맞춤 음식점 추천 알림
-                </p>
-              </div>
-              <Switch
-                checked={recommendationAlerts}
-                onCheckedChange={setRecommendationAlerts}
-              />
-            </div>
-          </CardContent>
-        </Card>
 
         {/* 앱 설정 */}
-        <Card className={isDarkMode ? "bg-gray-800 border-gray-700" : ""}>
-          <CardHeader>
-            <CardTitle
-              className={`flex items-center gap-2 ${
-                isDarkMode ? "text-white" : ""
-              }`}
-            >
-              <Palette className="h-5 w-5" />앱 설정
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <Card className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]">
+          <CardContent>
             <div className="flex items-center justify-between">
               <div>
                 <Label className={isDarkMode ? "text-white" : ""}>
@@ -187,10 +95,13 @@ export default function SettingsPage() {
                   어두운 테마 사용
                 </p>
               </div>
-              <Switch checked={isDarkMode} onCheckedChange={toggleDarkMode} />
+              <Switch
+                checked={isDarkMode}
+                onCheckedChange={toggleDarkMode}
+                className="data-[state=checked]:bg-[#EB4C34]"
+              />
             </div>
 
-            <Separator className={isDarkMode ? "bg-gray-700" : ""} />
 
             <div>
               <Label className={isDarkMode ? "text-white" : ""}>언어</Label>
@@ -220,6 +131,21 @@ export default function SettingsPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* 로그아웃 버튼 */}
+            <div className="pt-2">
+            <Button
+  onClick={() => {
+    logout();
+    router.replace("/auth");
+  }}
+  className="w-full text-white font-semibold hover:opacity-90"
+  style={{ backgroundColor: "#EB4C34" }}
+>
+  로그아웃
+</Button>
+
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -228,6 +154,7 @@ export default function SettingsPage() {
       <ProfileEditModal
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}
+        nickname={nickname ?? ""}
       />
     </div>
   );

@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star, TrendingUp, Calendar, Clock } from "lucide-react";
 import { useApp } from "@/contexts/app-context";
+import { Separator } from "@/components/ui/separator";
 import {
   BarChart,
   Bar,
@@ -189,7 +190,7 @@ export default function StatisticsTab() {
         }
       `}</style>
       {/* 헤더 섹션 */}
-      <div className="relative w-full h-[72px] mb-6">
+      <div className="relative w-full h-[72px] mb-3">
         {/* 로고 */}
         <div className="absolute left-[13px] top-[14px] w-[44px] h-[44px]">
           <Image
@@ -215,6 +216,7 @@ export default function StatisticsTab() {
           </p>
         </div>
       </div>
+      <Separator className={isDarkMode ? "bg-gray-700" : ""} />
 
       {/* 요약 통계 카드들 */}
       <div className="flex justify-center items-center gap-3">
@@ -233,14 +235,14 @@ export default function StatisticsTab() {
         </div>
 
         {/* 총 리뷰 수 - 흰색 배경 */}
-        <div className="w-[164px] h-[71px] bg-white border border-[#EB4C34] rounded-[10px] relative">
+        <div className="w-[164px] h-[71px] bg-[#EB4C34] border border-[#EB4C34] rounded-[10px] relative">
           <div className="absolute w-[62px] h-[25.82px] left-1/2 top-[12.52px] transform -translate-x-1/2">
-            <div className="font-bold text-2xl leading-7 text-center text-[#EB4C34]">
+            <div className="font-bold text-2xl leading-7 text-center text-white">
               {totalReviews}
             </div>
           </div>
           <div className="absolute w-[46px] h-[15px] left-1/2 top-[43px] transform -translate-x-1/2">
-            <div className="font-normal text-[11px] leading-[13px] text-center text-[#333333]">
+            <div className="font-normal text-[11px] leading-[13px] text-center text-white">
               총 리뷰 수
             </div>
           </div>
@@ -249,9 +251,7 @@ export default function StatisticsTab() {
 
       {/* 이번 달 활동 */}
       <Card
-        className={`border-0 shadow-none ${
-          isDarkMode ? "bg-gray-800" : "bg-white"
-        }`}
+        className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]"
       >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -281,9 +281,7 @@ export default function StatisticsTab() {
 
       {/* 선호하는 음식 - 파이 차트 */}
       <Card
-        className={`border-0 shadow-none ${
-          isDarkMode ? "bg-gray-800" : "bg-white"
-        }`}
+        className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]"
       >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -361,9 +359,7 @@ export default function StatisticsTab() {
 
       {/* 월별 리뷰 트렌드 - 라인 차트 */}
       <Card
-        className={`border-0 shadow-none ${
-          isDarkMode ? "bg-gray-800" : "bg-white"
-        }`}
+        className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]"
       >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -428,9 +424,7 @@ export default function StatisticsTab() {
 
       {/* 평점 분포 - 바 차트 */}
       <Card
-        className={`border-0 shadow-none ${
-          isDarkMode ? "bg-gray-800" : "bg-white"
-        }`}
+        className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]"
       >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -500,7 +494,7 @@ export default function StatisticsTab() {
                 isDarkMode ? "text-white" : "text-gray-900"
               }`}
             >
-              자주 방문한 음식점
+              버디의 랭킹
             </h3>
           </div>
 

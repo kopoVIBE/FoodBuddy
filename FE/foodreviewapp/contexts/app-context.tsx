@@ -1,17 +1,21 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
+import type React from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 interface AppContextType {
-  isDarkMode: boolean
-  language: string
-  toggleDarkMode: () => void
-  setLanguage: (lang: string) => void
-  t: (key: string) => string
+  isDarkMode: boolean;
+  language: string;
+  nickname: string | null;
+  isAuthenticated: boolean;
+  toggleDarkMode: () => void;
+  setLanguage: (lang: string) => void;
+  setUserInfo: (nickname: string, token: string) => void;
+  logout: () => void;
+  t: (key: string) => string;
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined)
+const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const translations = {
   ko: {
@@ -66,55 +70,98 @@ const translations = {
     share: "Share",
     saveReview: "Save Review",
   },
-}
+};
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [isDarkMode, setIsDarkMode] = useState(false)
-  const [language, setLanguageState] = useState("ko")
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [language, setLanguageState] = useState("ko");
+  const [nickname, setNickname] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const savedDarkMode = localStorage.getItem("darkMode") === "true"
-    const savedLanguage = localStorage.getItem("language") || "ko"
-    setIsDarkMode(savedDarkMode)
-    setLanguageState(savedLanguage)
+    // 클라이언트 사이드에서만 실행
+    if (typeof window !== "undefined") {
+      const savedDarkMode = localStorage.getItem("darkMode") === "true";
+      const savedLanguage = localStorage.getItem("language") || "ko";
+      const savedNickname = localStorage.getItem("nickname");
+      const authToken = localStorage.getItem("accessToken"); // 키 이름 일치시키기
 
-    if (savedDarkMode) {
-      document.documentElement.classList.add("dark")
+      setIsDarkMode(savedDarkMode);
+      setLanguageState(savedLanguage);
+      setNickname(savedNickname);
+      setIsAuthenticated(!!authToken);
+
+      if (savedDarkMode) {
+        document.documentElement.classList.add("dark");
+      }
     }
-  }, [])
+  }, []);
 
   const toggleDarkMode = () => {
-    const newDarkMode = !isDarkMode
-    setIsDarkMode(newDarkMode)
-    localStorage.setItem("darkMode", newDarkMode.toString())
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+    localStorage.setItem("darkMode", newDarkMode.toString());
 
     if (newDarkMode) {
-      document.documentElement.classList.add("dark")
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove("dark")
+      document.documentElement.classList.remove("dark");
     }
-  }
+  };
 
   const setLanguage = (lang: string) => {
-    setLanguageState(lang)
-    localStorage.setItem("language", lang)
-  }
+    setLanguageState(lang);
+    localStorage.setItem("language", lang);
+  };
+
+  // 사용자 정보 설정 (로그인 시 호출)
+  const setUserInfo = (userNickname: string, token: string) => {
+    setNickname(userNickname);
+    setIsAuthenticated(true);
+    localStorage.setItem("nickname", userNickname);
+    localStorage.setItem("accessToken", token); // API 요청과 일치하도록 변경
+  };
+
+  // 로그아웃
+  const logout = () => {
+    setNickname(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem("nickname");
+    localStorage.removeItem("accessToken"); // 키 이름 일치시키기
+    localStorage.removeItem("hasShownSplash"); // 스플래시도 초기화
+  };
 
   const t = (key: string): string => {
-    return translations[language as keyof typeof translations]?.[key as keyof typeof translations.ko] || key
-  }
+    return (
+      translations[language as keyof typeof translations]?.[
+        key as keyof typeof translations.ko
+      ] || key
+    );
+  };
 
   return (
-    <AppContext.Provider value={{ isDarkMode, language, toggleDarkMode, setLanguage, t }}>
+    <AppContext.Provider
+      value={{
+        isDarkMode,
+        language,
+        nickname,
+        isAuthenticated,
+        toggleDarkMode,
+        setLanguage,
+        setUserInfo,
+        logout,
+        t,
+      }}
+    >
       {children}
     </AppContext.Provider>
-  )
+  );
 }
 
 export const useApp = () => {
-  const context = useContext(AppContext)
+  const context = useContext(AppContext);
   if (context === undefined) {
-    throw new Error("useApp must be used within an AppProvider")
+    throw new Error("useApp must be used within an AppProvider");
   }
-  return context
-}
+  return context;
+};
