@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ import NicknameEditModal from "@/components/nickname-edit-modal";
 import PasswordChangeModal from "@/components/password-change-modal";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { getUserInfo, UserInfoResponse } from "@/lib/api";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -39,6 +40,28 @@ export default function SettingsPage() {
   const [recommendationAlerts, setRecommendationAlerts] = useState(true);
   const [showNicknameModal, setShowNicknameModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [userInfo, setUserInfo] = useState<UserInfoResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // 사용자 정보 가져오기
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const info = await getUserInfo();
+        setUserInfo(info);
+      } catch (error) {
+        console.error("사용자 정보를 가져오는데 실패했습니다:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (nickname) {
+      fetchUserInfo();
+    } else {
+      setLoading(false);
+    }
+  }, [nickname]);
 
   return (
     <div
@@ -69,9 +92,14 @@ export default function SettingsPage() {
                     isDarkMode ? "text-gray-300" : "text-gray-600"
                   }`}
                 >
-                  {nickname
-                    ? `${nickname}@foodbuddy.com`
-                    : "로그인이 필요합니다"}
+                  {loading 
+                    ? "로딩 중..." 
+                    : userInfo?.email 
+                      ? userInfo.email
+                      : nickname
+                      ? "이메일 정보를 불러올 수 없습니다"
+                      : "로그인이 필요합니다"
+                  }
                 </p>
               </div>
             </div>
