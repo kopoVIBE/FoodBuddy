@@ -30,8 +30,8 @@ public class Receipt {
     @Column(name = "restaurant_name", length = 100) // OCR 결과로 추출한 원본 상호명
     private String restaurantName;
 
-    @Column(name = "original_img", columnDefinition = "TEXT")
-    private String originalImg; // 영수증 이미지 경로 혹은 URL (또는 base64 데이터)
+    @Column(name = "original_img", columnDefinition = "LONGTEXT")
+    private String originalImg; // 영수증 이미지 Base64 데이터 - LONGTEXT로 변경
 
     @Column(name = "receipt_date")
     private LocalDate receiptDate; // 영수증에 찍힌 날짜 (방문일자)

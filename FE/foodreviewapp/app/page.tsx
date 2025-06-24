@@ -12,6 +12,7 @@ import RestaurantDetailModal from "@/components/restaurant-detail-modal";
 import RestaurantReviewsModal from "@/components/restaurant-reviews-modal";
 import { useApp } from "@/contexts/app-context";
 import { useRouter } from "next/navigation";
+import { getMyDetailedReviews, MyReviewResponse } from "@/lib/api";
 
 // 임시 데이터
 const myReviews = [
@@ -173,7 +174,7 @@ export default function HomePage() {
   const router = useRouter();
   const [showSplash, setShowSplash] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("written");
+  const [activeTab, setActiveTab] = useState<"written" | "favorites">("written");
   const [sortOrder, setSortOrder] = useState("latest");
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [shareModal, setShareModal] = useState({
@@ -219,50 +220,98 @@ export default function HomePage() {
     }));
   };
 
+  // 실제 리뷰 데이터
+  const [myReviews, setMyReviews] = useState<MyReviewResponse[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+
+  // 리뷰 데이터 불러오기
+  const fetchMyReviews = async () => {
+    try {
+      setReviewsLoading(true);
+      console.log("리뷰 데이터 요청 시작:", sortOrder);
+      const reviews = await getMyDetailedReviews(sortOrder);
+      console.log("받은 리뷰 데이터:", reviews);
+      setMyReviews(reviews);
+    } catch (error) {
+      console.error("리뷰 데이터 불러오기 실패:", error);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  // 리뷰 데이터를 UI에서 사용할 형태로 변환
+  const formattedReviews = useMemo(() => {
+    console.log("formattedReviews 계산 중:", myReviews);
+    const formatted = myReviews.map(review => {
+      // Base64 이미지 처리
+      let imageUrl = "/placeholder.svg?height=200&width=300";
+      if (review.originalImg) {
+        // 이미 data URL 형식인지 확인
+        if (review.originalImg.startsWith('data:image/')) {
+          imageUrl = review.originalImg;
+        } else {
+          // Base64 데이터만 있는 경우 prefix 추가
+          imageUrl = `data:image/jpeg;base64,${review.originalImg}`;
+        }
+      }
+
+      return {
+        id: parseInt(review.reviewId.replace(/-/g, '').substring(0, 8), 16),
+        restaurantName: review.restaurantName || "알 수 없는 식당",
+        location: review.restaurantAddress || "주소 없음",
+        rating: Number(review.rating),
+        date: new Date(review.createdAt).toISOString().split('T')[0],
+        content: review.content,
+        image: imageUrl,
+        tags: [review.restaurantCategory || "기타"],
+        isFavorite: false,
+        receiptImage: imageUrl,
+      };
+    });
+    console.log("변환된 리뷰 데이터:", formatted);
+    return formatted;
+  }, [myReviews]);
+
   // 스플래시 화면과 인증 상태 확인
   useEffect(() => {
     const checkAuthStatus = () => {
-      // 클라이언트 사이드에서만 실행
       if (typeof window === "undefined") return;
 
-      // 로그인 상태 확인 (accessToken으로 통일)
       const authToken = localStorage.getItem("accessToken");
       const hasShownSplash = localStorage.getItem("hasShownSplash");
 
-      console.log("인증 상태 확인:", {
-        authToken: !!authToken,
-        hasShownSplash,
-      });
+      console.log("인증 상태 확인:", { authToken: !!authToken, hasShownSplash });
 
-      // 토큰이 없으면 auth 페이지로 리디렉션
       if (!authToken) {
-        console.log("토큰 없음 - /auth로 리디렉션");
         setIsLoading(false);
         router.replace("/auth");
         return;
       }
 
-      // 토큰이 있으면 인증된 사용자
-      console.log("토큰 존재 - 인증된 사용자");
-
-      // 스플래시 화면을 보여줄지 결정
       if (!hasShownSplash) {
         setShowSplash(true);
-        // 3초 후 스플래시 화면 종료
         setTimeout(() => {
           setShowSplash(false);
           setIsLoading(false);
           localStorage.setItem("hasShownSplash", "true");
+          fetchMyReviews();
         }, 3000);
       } else {
-        // 스플래시를 이미 보여줬으면 바로 로딩 종료
         setIsLoading(false);
+        fetchMyReviews();
       }
     };
 
-    // 즉시 실행
     checkAuthStatus();
   }, [router]);
+
+  // 정렬 순서 변경 시 데이터 다시 불러오기
+  useEffect(() => {
+    if (!isLoading && !showSplash && globalIsAuthenticated) {
+      console.log("정렬 순서 변경으로 인한 데이터 재요청:", sortOrder);
+      fetchMyReviews();
+    }
+  }, [sortOrder]);
 
   const sortOptions = [
     { value: "latest", label: "최신순" },
@@ -272,7 +321,8 @@ export default function HomePage() {
 
   // 정렬된 리뷰 목록
   const sortedReviews = useMemo(() => {
-    const reviewsCopy = [...myReviews];
+    console.log("sortedReviews 계산 중:", formattedReviews, "정렬:", sortOrder);
+    const reviewsCopy = [...formattedReviews];
 
     switch (sortOrder) {
       case "latest":
@@ -290,7 +340,7 @@ export default function HomePage() {
       default:
         return reviewsCopy;
     }
-  }, [sortOrder]);
+  }, [formattedReviews, sortOrder]);
 
   // 로딩 중인 경우 빈 화면 표시 (리디렉션 중)
   if (isLoading && !showSplash) {
@@ -328,7 +378,7 @@ export default function HomePage() {
 
   // 즐겨찾기 카드 클릭 핸들러
   const handleFavoriteCardClick = (restaurantName: string) => {
-    const restaurantReviews = myReviews.filter(
+    const restaurantReviews = formattedReviews.filter(
       (review) => review.restaurantName === restaurantName
     );
     setRestaurantReviewsModal({
@@ -337,6 +387,14 @@ export default function HomePage() {
       reviews: restaurantReviews,
     });
   };
+
+  console.log("렌더링 시점 데이터:", {
+    myReviews: myReviews.length,
+    formattedReviews: formattedReviews.length,
+    sortedReviews: sortedReviews.length,
+    reviewsLoading,
+    activeTab
+  });
 
   return (
     <div className={`min-h-screen pb-20 ${isDarkMode ? "bg-gray-900" : "bg-white"}`}>
@@ -402,64 +460,68 @@ export default function HomePage() {
               즐겨찾기
             </button>
           </div>
-{/* 통계 + 정렬 공통 헤더 */}
-<div className="flex justify-between items-center">
-  {activeTab === "written" && (
-    <>
-      <p className="text-lg font-bold">
-        <span className="text-[#EB4C34]">버디</span>
-        <span className="text-[#1D1D1D]">가 남긴 맛집 리뷰 </span>
-        <span className="text-[#EB4C34] text-xl">{sortedReviews.length}</span>
-        <span className="text-[#1D1D1D]">개</span>
-      </p>
 
-      <div className="relative">
-        <Button
-          size="sm"
-          className={`rounded-full px-4 ${
-            isDarkMode
-              ? "bg-gray-700 hover:bg-gray-600 text-white"
-              : "bg-gray-800 hover:bg-gray-700 text-white"
-          }`}
-          onClick={() => setShowSortMenu(!showSortMenu)}
-        >
-          {getCurrentSortLabel()}
-          <ChevronDown className="w-4 h-4 ml-1" />
-        </Button>
+          {/* 통계 + 정렬 공통 헤더 */}
+          <div className="flex justify-between items-center">
+            {activeTab === "written" && (
+              <>
+                <p className="text-lg font-bold">
+                  <span className="text-[#EB4C34]">버디</span>
+                  <span className="text-[#1D1D1D]">가 남긴 맛집 리뷰 </span>
+                  <span className="text-[#EB4C34] text-xl">{sortedReviews.length}</span>
+                  <span className="text-[#1D1D1D]">개</span>
+                </p>
 
-        {showSortMenu && (
-          <div
-            className={`absolute top-full right-0 mt-1 rounded-lg shadow-lg z-10 ${
-              isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-            } border`}
-          >
+                <div className="relative">
+                  <Button
+                    size="sm"
+                    className={`rounded-full px-4 ${
+                      isDarkMode
+                        ? "bg-gray-700 hover:bg-gray-600 text-white"
+                        : "bg-gray-800 hover:bg-gray-700 text-white"
+                    }`}
+                    onClick={() => setShowSortMenu(!showSortMenu)}
+                  >
+                    {getCurrentSortLabel()}
+                    <ChevronDown className="w-4 h-4 ml-1" />
+                  </Button>
+
+                  {showSortMenu && (
+                    <div
+                      className={`absolute top-full right-0 mt-1 rounded-lg shadow-lg z-10 ${
+                        isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                      } border`}
+                    >
+                      {sortOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${
+                            isDarkMode ? "text-white hover:bg-gray-700" : "text-gray-900"
+                          }`}
+                          onClick={() => handleSortSelect(option.value)}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {activeTab === "favorites" && (
+              <>
+                <p className="text-lg font-bold">
+                  <span className="text-[#EB4C34]">버디</span>
+                  <span className="text-[#1D1D1D]">가 자주 가는 단골 맛집 </span>
+                  <span className="text-[#EB4C34] text-xl">{favoriteReviews.length}</span>
+                  <span className="text-[#1D1D1D]">곳이에요!</span>
+                </p>
+
+                <div></div> {/* 정렬 버튼 자리 유지용 (필요 시 삭제 가능) */}
+              </>
+            )}
           </div>
-        )}
-      </div>
-    </>
-  )}
-
-  {activeTab === "favorites" && (
-    <>
-      <p className="text-lg font-bold">
-        <span className="text-[#EB4C34]">버디</span>
-        <span className="text-[#1D1D1D]">가 자주 가는 단골 맛집 </span>
-        <span className="text-[#EB4C34] text-xl">{favoriteReviews.length}</span>
-        <span className="text-[#1D1D1D]">곳이에요!</span>
-      </p>
-
-      <div></div> {/* 정렬 버튼 자리 유지용 (필요 시 삭제 가능) */}
-    </>
-  )}
-</div>
-
-          {/* 작성한 리뷰 탭일 때만 통계 및 정렬 표시 */}
-          {activeTab === "written" && (
-            <div className="flex justify-between items-center">
-              
-              
-            </div>
-          )}
         </div>
       </div>
 
@@ -467,85 +529,97 @@ export default function HomePage() {
         {/* 작성한 리뷰 탭 */}
         {activeTab === "written" && (
           <>
-            {sortedReviews.map((review) => (
-              <Card
-                key={review.id}
-                className={`relative overflow-hidden cursor-pointer transition-colors border-0 shadow-none w-full ${
-                  isDarkMode ? "bg-gray-800" : "bg-white"
-                }`}
-                onClick={() => setReviewDetailModal({ isOpen: true, review })}
-              >
-                <CardContent className="p-3">
-                  {/* 상단: 음식점 이름, 별점, 날짜 */}
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      {/* 음식점 이름 */}
-                      <h3 className={`text-sm font-medium ${isDarkMode ? "text-white" : "text-black"}`}>
-                        {review.restaurantName}
-                      </h3>
-
-                      {/* 별점 */}
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-4 h-4 ${i < review.rating ? "fill-[#FFDC17] text-[#FFDC17]" : "text-gray-300"}`}
-                          />
-                        ))}
+            {reviewsLoading ? (
+              <div className="text-center py-8">
+                <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                  리뷰를 불러오는 중...
+                </p>
+              </div>
+            ) : sortedReviews.length === 0 ? (
+              <div className="text-center py-8">
+                <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                  아직 작성한 리뷰가 없습니다.
+                </p>
+                <p className={`text-sm mt-2 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                  총 {myReviews.length}개 리뷰 데이터, {formattedReviews.length}개 변환됨
+                </p>
+                <Button 
+                  onClick={() => router.push('/write')}
+                  className="mt-4 bg-red-500 hover:bg-red-600 text-white"
+                >
+                  첫 리뷰 작성하기
+                </Button>
+              </div>
+            ) : (
+              sortedReviews.map((review) => (
+                <Card
+                  key={review.id}
+                  className={`relative overflow-hidden cursor-pointer transition-colors border-0 shadow-sm w-full ${
+                    isDarkMode ? "bg-gray-800" : "bg-white"
+                  }`}
+                  onClick={() => setReviewDetailModal({ isOpen: true, review })}
+                >
+                  <CardContent className="p-3">
+                    {/* 상단: 음식점 이름, 별점, 날짜 */}
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <h3 className={`font-semibold text-sm ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+                          {review.restaurantName}
+                        </h3>
+                        <div className="flex items-center gap-1 mt-1">
+                          <div className="flex">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-[14px] h-[14px] ${
+                                  i < review.rating
+                                    ? "fill-[#FFDC17] text-[#FFDC17]"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className={`text-xs ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                            {review.rating}
+                          </span>
+                        </div>
                       </div>
+                      <span className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                        {review.date}
+                      </span>
                     </div>
 
-                    {/* 날짜 */}
-                    <span className="text-[12px] text-[#BCBCBC] font-normal">{review.date}</span>
-                  </div>
+                    {/* 위치 정보 */}
+                    <div className="flex items-center gap-1 mb-2">
+                      <MapPin className={`w-3 h-3 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
+                      <span className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                        {review.location}
+                      </span>
+                    </div>
 
-                  {/* 위치 정보 */}
-                  <div className="flex items-center gap-1 mb-3">
-                    <MapPin className="w-4 h-4 text-[#BCBCBC]" />
-                    <span className="text-[12px] text-[#BCBCBC] font-normal">{review.location}</span>
-                  </div>
-
-                  {/* 리뷰 내용 */}
-                  <div className="mb-2">
-                    <p className={`text-sm leading-5 font-light ${isDarkMode ? "text-gray-300" : "text-[#333333]"}`}>
-                      {review.content}
-                    </p>
-                  </div>
-
-                  {/* 하단: 영수증 이미지 + 수정 버튼 */}
-                  <div className="mt-2 flex items-end justify-between">
-                    {/* 영수증 */}
-                    <div className="w-[74px] h-[74px] bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                      {review.receiptImage ? (
-                        <Image
-                          src={review.receiptImage}
-                          alt="영수증"
-                          width={74}
-                          height={74}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-[12px] text-gray-500">영수증</span>
+                    {/* 리뷰 내용과 이미지 */}
+                    <div className="flex gap-3">
+                      <div className="flex-1">
+                        <p className={`text-sm leading-relaxed ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}>
+                          {review.content}
+                        </p>
+                      </div>
+                      {review.image && (
+                        <div className="w-16 h-16 flex-shrink-0">
+                          <Image
+                            src={review.image}
+                            alt="영수증"
+                            width={64}
+                            height={64}
+                            className="w-full h-full object-cover rounded-md"
+                          />
                         </div>
                       )}
                     </div>
-
-                    {/* 수정 버튼 */}
-                    <Button
-                      size="sm"
-                      className="h-[22px] px-3 bg-[#EAEAEA] hover:bg-gray-300 text-white text-[12px] font-medium rounded-[10px]"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setReviewEditModal({ isOpen: true, review });
-                      }}
-                    >
-                      수정
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </>
         )}
 
