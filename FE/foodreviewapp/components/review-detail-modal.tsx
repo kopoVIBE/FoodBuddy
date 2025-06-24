@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { X, Star, MapPin, Calendar, Share2, Trash2 } from "lucide-react"
 import Image from "next/image"
+import { useState, useEffect } from "react"
 
 interface Review {
   id: number
@@ -15,6 +16,8 @@ interface Review {
   image: string
   tags: string[]
   isFavorite: boolean
+  restaurantId?: string // 즐겨찾기 기능을 위해 추가
+  reviewId?: string // 리뷰 삭제를 위해 추가
 }
 
 interface ReviewDetailModalProps {
@@ -22,6 +25,8 @@ interface ReviewDetailModalProps {
   onClose: () => void
   review: Review | null
   onShare: (title: string, content: string) => void
+  onFavoriteToggle?: (restaurantId: string, isFavorited: boolean) => Promise<void>
+  onDelete?: (reviewId: string) => Promise<void>
   className?: string
 }
 
@@ -30,12 +35,56 @@ export default function ReviewDetailModal({
   onClose,
   review,
   onShare,
+  onFavoriteToggle,
+  onDelete,
   className = "",
 }: ReviewDetailModalProps) {
+  const [isFavorited, setIsFavorited] = useState(false)
+  const [isToggling, setIsToggling] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  useEffect(() => {
+    if (review) {
+      setIsFavorited(review.isFavorite)
+    }
+  }, [review])
+
   if (!isOpen || !review) return null
 
   const handleShare = () => {
     onShare(review.restaurantName, review.content)
+  }
+
+  const handleFavoriteToggle = async () => {
+    if (!review.restaurantId || !onFavoriteToggle || isToggling) return
+
+    try {
+      setIsToggling(true)
+      await onFavoriteToggle(review.restaurantId, !isFavorited)
+      setIsFavorited(!isFavorited)
+    } catch (error) {
+      console.error("즐겨찾기 토글 실패:", error)
+    } finally {
+      setIsToggling(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!review.reviewId || !onDelete || isDeleting) return
+
+    // 삭제 확인 대화상자
+    if (!confirm("정말 이 리뷰를 삭제하시겠습니까?")) return
+
+    try {
+      setIsDeleting(true)
+      await onDelete(review.reviewId)
+      onClose() // 삭제 후 모달 닫기
+    } catch (error) {
+      console.error("리뷰 삭제 실패:", error)
+      alert("리뷰 삭제에 실패했습니다. 다시 시도해주세요.")
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -67,7 +116,23 @@ export default function ReviewDetailModal({
           <div className="p-4 space-y-4">
             {/* 음식점 정보 */}
             <div>
-              <h4 className="text-xl font-bold text-gray-900 mb-2">{review.restaurantName}</h4>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xl font-bold text-gray-900">{review.restaurantName}</h4>
+                {/* 즐겨찾기 하트 아이콘 */}
+                <button
+                  onClick={handleFavoriteToggle}
+                  disabled={isToggling}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                >
+                  <Image
+                    src={isFavorited ? "/icons/heart-filled.svg" : "/icons/heart-unfilled.svg"}
+                    alt="즐겨찾기"
+                    width={24}
+                    height={24}
+                    className="w-6 h-6"
+                  />
+                </button>
+              </div>
               <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
@@ -118,9 +183,11 @@ export default function ReviewDetailModal({
           <Button
             variant="outline"
             className="flex-1 bg-white border border-[#EB4C34] text-[#EB4C34] hover:bg-[#EB4C34]/10 rounded-[10px]"
+            onClick={handleDelete}
+            disabled={isDeleting}
           >
             <Trash2 className="h-4 w-4 mr-2" />
-            삭제
+            {isDeleting ? "삭제 중..." : "삭제"}
           </Button>
         </div>
       </div>
