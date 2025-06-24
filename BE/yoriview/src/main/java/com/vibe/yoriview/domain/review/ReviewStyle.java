@@ -13,7 +13,7 @@ import lombok.*;
 public class ReviewStyle {
 
     @Id
-    @Column(name = "style_id", length = 10)
+    @Column(name = "style_id", length = 20)
     private String styleId;
 
     @Column(name = "style_name", nullable = false, length = 50)

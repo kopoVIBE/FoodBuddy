@@ -11,46 +11,36 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [showSplash, setShowSplash] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const [isShowingPageLevelSplash, setIsShowingPageLevelSplash] =
+    useState(false);
 
-  // 클라이언트 환경인지 확인
+  // 홈페이지에서 스플래시 화면이 표시되는지 체크
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // 클라이언트에서만 스플래시 화면 로직 실행
-  useEffect(() => {
-    if (!isClient) return;
-
-    // 홈페이지에서만 스플래시 화면 체크
     if (pathname === "/") {
-      // localStorage에서 스플래시 표시 여부 확인
-      const hasShownSplash = localStorage.getItem("hasShownSplash");
+      // 클라이언트 사이드에서만 체크
+      if (typeof window !== "undefined") {
+        const authToken = localStorage.getItem("authToken");
+        const hasShownSplash = localStorage.getItem("hasShownSplash");
 
-      if (!hasShownSplash) {
-        // 처음 실행이면 스플래시 표시
-        setShowSplash(true);
+        // 토큰이 있고 스플래시를 아직 안 봤으면 스플래시 표시 중
+        if (authToken && !hasShownSplash) {
+          setIsShowingPageLevelSplash(true);
 
-        // 3초 후 스플래시 화면 숨기고 localStorage에 기록
-        const timer = setTimeout(() => {
-          setShowSplash(false);
-          localStorage.setItem("hasShownSplash", "true");
-        }, 3000);
+          // 2초 후 스플래시 종료 (시간 단축)
+          const timer = setTimeout(() => {
+            setIsShowingPageLevelSplash(false);
+          }, 2000);
 
-        return () => clearTimeout(timer);
-      } else {
-        // 이미 스플래시를 본 적이 있으면 바로 메인 화면
-        setShowSplash(false);
+          return () => clearTimeout(timer);
+        }
       }
-    } else {
-      setShowSplash(false);
     }
-  }, [pathname, isClient]);
+    setIsShowingPageLevelSplash(false);
+  }, [pathname]);
 
   // 스플래시 화면이거나 랜딩 페이지, 인증 페이지일 때는 네비게이션 숨김
   const hideNavigation =
-    showSplash ||
+    isShowingPageLevelSplash ||
     pathname === "/landing" ||
     pathname === "/splash" ||
     pathname === "/auth";

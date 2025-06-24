@@ -87,6 +87,38 @@ const favoriteRestaurants = [
     visitCount: 15,
     lastVisit: "2024-12-20",
   },
+  {
+    id: 3,
+    name: "맛없는 김치찌개",
+    location: "서울시 강남구",
+    rating: 4.5,
+    visitCount: 15,
+    lastVisit: "2024-12-20",
+  },
+  {
+    id: 4,
+    name: "맛있나 김치찌개",
+    location: "서울시 강남구",
+    rating: 4.5,
+    visitCount: 15,
+    lastVisit: "2024-12-20",
+  },
+  {
+    id: 5,
+    name: "맛이어때 김치찌개",
+    location: "서울시 강남구",
+    rating: 4.5,
+    visitCount: 15,
+    lastVisit: "2024-12-20",
+  },
+  {
+    id: 6,
+    name: "맛있어 김치찌개",
+    location: "서울시 강남구",
+    rating: 4.5,
+    visitCount: 15,
+    lastVisit: "2024-12-20",
+  }
 ];
 
 // 스플래시 화면 컴포넌트
@@ -94,7 +126,7 @@ function SplashScreen({ onComplete }: { onComplete: () => void }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onComplete();
-    }, 3000); // 3초
+    }, 2000); // 2초로 단축
 
     return () => clearTimeout(timer);
   }, [onComplete]);
@@ -132,10 +164,14 @@ function SplashScreen({ onComplete }: { onComplete: () => void }) {
 }
 
 export default function HomePage() {
-  const { t, isDarkMode } = useApp();
+  const {
+    t,
+    isDarkMode,
+    nickname,
+    isAuthenticated: globalIsAuthenticated,
+  } = useApp();
   const router = useRouter();
   const [showSplash, setShowSplash] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("written");
   const [sortOrder, setSortOrder] = useState("latest");
@@ -167,48 +203,66 @@ export default function HomePage() {
     reviews: [],
   });
 
-  // 인증 상태 확인 및 스플래시 화면 상태 관리
+  // 즐겨찾기 탭용 데이터
+  const favoriteReviews = useMemo(() => {
+    return favoriteRestaurants;
+  }, []);
+
+  const [favoriteStates, setFavoriteStates] = useState<{ [key: number]: boolean }>(() =>
+    Object.fromEntries(favoriteReviews.map((r) => [r.id, true]))
+  );
+
+  const toggleFavorite = (id: number) => {
+    setFavoriteStates((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  // 스플래시 화면과 인증 상태 확인
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      // 로그인 상태 확인 (임시로 localStorage 사용)
+    const checkAuthStatus = () => {
+      // 클라이언트 사이드에서만 실행
+      if (typeof window === "undefined") return;
+
+      // 로그인 상태 확인
       const authToken = localStorage.getItem("authToken");
       const hasShownSplash = localStorage.getItem("hasShownSplash");
 
+      console.log("인증 상태 확인:", {
+        authToken: !!authToken,
+        hasShownSplash,
+      });
+
+      // 토큰이 없으면 auth 페이지로 리디렉션
       if (!authToken) {
-        // 로그인되지 않은 경우 auth 페이지로 리디렉션
-        router.push("/auth");
+        console.log("토큰 없음 - /auth로 리디렉션");
+        setIsLoading(false);
+        router.replace("/auth");
         return;
       }
 
-      // 로그인된 경우
-      setIsAuthenticated(true);
-      setIsLoading(false);
+      // 토큰이 있으면 인증된 사용자
+      console.log("토큰 존재 - 인증된 사용자");
 
-      // 스플래시 화면 로직은 별도로 처리
+      // 스플래시 화면을 보여줄지 결정
       if (!hasShownSplash) {
         setShowSplash(true);
+        // 2초 후 스플래시 화면 종료 (시간 단축)
+        setTimeout(() => {
+          setShowSplash(false);
+          setIsLoading(false);
+          localStorage.setItem("hasShownSplash", "true");
+        }, 2000);
+      } else {
+        // 스플래시를 이미 보여줬으면 바로 로딩 종료
+        setIsLoading(false);
       }
     };
 
+    // 즉시 실행 - 불필요한 지연 제거
     checkAuthStatus();
   }, [router]);
-
-  // 스플래시 화면 완료 처리
-  useEffect(() => {
-    if (showSplash) {
-      const timer = setTimeout(() => {
-        setShowSplash(false);
-        localStorage.setItem("hasShownSplash", "true");
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [showSplash]);
-
-  // 로딩 중이거나 인증되지 않은 경우 빈 화면 표시
-  if (isLoading || !isAuthenticated) {
-    return null;
-  }
 
   const sortOptions = [
     { value: "latest", label: "최신순" },
@@ -238,10 +292,15 @@ export default function HomePage() {
     }
   }, [sortOrder]);
 
-  // 즐겨찾기 탭용 데이터
-  const favoriteReviews = useMemo(() => {
-    return favoriteRestaurants;
-  }, []);
+  // 로딩 중인 경우 스플래시 화면 표시
+  if (isLoading) {
+    return <SplashScreen onComplete={() => {}} />;
+  }
+
+  // 인증되지 않은 경우 빈 화면 (리디렉션 중)
+  if (!globalIsAuthenticated) {
+    return null;
+  }
 
   // 플로팅 버튼 클릭 핸들러
   const handleFloatingButtonClick = () => {
@@ -280,11 +339,7 @@ export default function HomePage() {
   }
 
   return (
-    <div
-      className={`min-h-screen pb-20 ${
-        isDarkMode ? "bg-gray-900" : "bg-white"
-      }`}
-    >
+    <div className={`min-h-screen pb-20 ${isDarkMode ? "bg-gray-900" : "bg-white"}`}>
       {/* 헤더 */}
       <div className={`px-4 py-6 ${isDarkMode ? "bg-gray-800" : "bg-white"}`}>
         <div className="max-w-md mx-auto">
@@ -304,7 +359,7 @@ export default function HomePage() {
                   isDarkMode ? "text-white" : "text-gray-900"
                 }`}
               >
-                안녕하세요! 마틸님
+                안녕하세요! {nickname || "게스트"}님
               </h1>
               <p
                 className={`text-sm ${
@@ -347,55 +402,62 @@ export default function HomePage() {
               즐겨찾기
             </button>
           </div>
+{/* 통계 + 정렬 공통 헤더 */}
+<div className="flex justify-between items-center">
+  {activeTab === "written" && (
+    <>
+      <p className="text-lg font-bold">
+        <span className="text-[#EB4C34]">버디</span>
+        <span className="text-[#1D1D1D]">가 남긴 맛집 리뷰 </span>
+        <span className="text-[#EB4C34] text-xl">{sortedReviews.length}</span>
+        <span className="text-[#1D1D1D]">개</span>
+      </p>
+
+      <div className="relative">
+        <Button
+          size="sm"
+          className={`rounded-full px-4 ${
+            isDarkMode
+              ? "bg-gray-700 hover:bg-gray-600 text-white"
+              : "bg-gray-800 hover:bg-gray-700 text-white"
+          }`}
+          onClick={() => setShowSortMenu(!showSortMenu)}
+        >
+          {getCurrentSortLabel()}
+          <ChevronDown className="w-4 h-4 ml-1" />
+        </Button>
+
+        {showSortMenu && (
+          <div
+            className={`absolute top-full right-0 mt-1 rounded-lg shadow-lg z-10 ${
+              isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+            } border`}
+          >
+          </div>
+        )}
+      </div>
+    </>
+  )}
+
+  {activeTab === "favorites" && (
+    <>
+      <p className="text-lg font-bold">
+        <span className="text-[#EB4C34]">버디</span>
+        <span className="text-[#1D1D1D]">가 자주 가는 단골 맛집 </span>
+        <span className="text-[#EB4C34] text-xl">{favoriteReviews.length}</span>
+        <span className="text-[#1D1D1D]">곳이에요!</span>
+      </p>
+
+      <div></div> {/* 정렬 버튼 자리 유지용 (필요 시 삭제 가능) */}
+    </>
+  )}
+</div>
 
           {/* 작성한 리뷰 탭일 때만 통계 및 정렬 표시 */}
           {activeTab === "written" && (
             <div className="flex justify-between items-center">
-              <div>
-                <p className="text-lg font-bold text-red-500">
-                  버디와 쓴 총 리뷰 <span className="text-xl">112</span>개
-                </p>
-              </div>
-              <div className="relative">
-                <Button
-                  size="sm"
-                  className={`rounded-full px-4 ${
-                    isDarkMode
-                      ? "bg-gray-700 hover:bg-gray-600 text-white"
-                      : "bg-gray-800 hover:bg-gray-700 text-white"
-                  }`}
-                  onClick={() => setShowSortMenu(!showSortMenu)}
-                >
-                  {getCurrentSortLabel()}
-                  <ChevronDown className="w-4 h-4 ml-1" />
-                </Button>
-
-                {showSortMenu && (
-                  <div
-                    className={`absolute top-full right-0 mt-1 rounded-lg shadow-lg z-10 ${
-                      isDarkMode
-                        ? "bg-gray-800 border-gray-700"
-                        : "bg-white border-gray-200"
-                    } border`}
-                  >
-                    {sortOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => handleSortSelect(option.value)}
-                        className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                          isDarkMode ? "text-white" : "text-gray-900"
-                        } ${
-                          sortOrder === option.value
-                            ? "bg-gray-100 dark:bg-gray-700"
-                            : ""
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              
+              
             </div>
           )}
         </div>
@@ -414,15 +476,11 @@ export default function HomePage() {
                 onClick={() => setReviewDetailModal({ isOpen: true, review })}
               >
                 <CardContent className="p-3">
-                  {/* 상단 영역: 음식점 이름, 별점, 날짜 */}
+                  {/* 상단: 음식점 이름, 별점, 날짜 */}
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
                       {/* 음식점 이름 */}
-                      <h3
-                        className={`text-xs font-medium ${
-                          isDarkMode ? "text-white" : "text-black"
-                        }`}
-                      >
+                      <h3 className={`text-sm font-medium ${isDarkMode ? "text-white" : "text-black"}`}>
                         {review.restaurantName}
                       </h3>
 
@@ -431,48 +489,36 @@ export default function HomePage() {
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-3 h-3 ${
-                              i < review.rating
-                                ? "fill-[#FFDC17] text-[#FFDC17]"
-                                : "text-gray-300"
-                            }`}
+                            className={`w-4 h-4 ${i < review.rating ? "fill-[#FFDC17] text-[#FFDC17]" : "text-gray-300"}`}
                           />
                         ))}
                       </div>
                     </div>
 
                     {/* 날짜 */}
-                    <span className="text-[8px] text-[#BCBCBC] font-normal">
-                      {review.date}
-                    </span>
+                    <span className="text-[12px] text-[#BCBCBC] font-normal">{review.date}</span>
                   </div>
 
                   {/* 위치 정보 */}
                   <div className="flex items-center gap-1 mb-3">
-                    <MapPin className="w-3 h-3 text-[#BCBCBC]" />
-                    <span className="text-[8px] text-[#BCBCBC] font-normal">
-                      {review.location}
-                    </span>
+                    <MapPin className="w-4 h-4 text-[#BCBCBC]" />
+                    <span className="text-[12px] text-[#BCBCBC] font-normal">{review.location}</span>
                   </div>
 
                   {/* 리뷰 내용 */}
                   <div className="mb-2">
-                    <p
-                      className={`text-[10px] leading-3 font-light ${
-                        isDarkMode ? "text-gray-300" : "text-[#333333]"
-                      }`}
-                    >
+                    <p className={`text-sm leading-5 font-light ${isDarkMode ? "text-gray-300" : "text-[#333333]"}`}>
                       {review.content}
                     </p>
                   </div>
 
-                  {/* 하단 영역: 영수증 이미지와 수정 버튼 */}
+                  {/* 하단: 영수증 이미지 + 수정 버튼 */}
                   <div className="mt-2 flex items-end justify-between">
-                    {/* 영수증 이미지 */}
+                    {/* 영수증 */}
                     <div className="w-[74px] h-[74px] bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                       {review.receiptImage ? (
                         <Image
-                          src={review.receiptImage || "/placeholder.svg"}
+                          src={review.receiptImage}
                           alt="영수증"
                           width={74}
                           height={74}
@@ -480,7 +526,7 @@ export default function HomePage() {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-xs text-gray-500">영수증</span>
+                          <span className="text-[12px] text-gray-500">영수증</span>
                         </div>
                       )}
                     </div>
@@ -488,7 +534,7 @@ export default function HomePage() {
                     {/* 수정 버튼 */}
                     <Button
                       size="sm"
-                      className="h-[17px] px-2 bg-[#EAEAEA] hover:bg-gray-300 text-black text-[8px] font-medium rounded-[10px]"
+                      className="h-[22px] px-3 bg-[#EAEAEA] hover:bg-gray-300 text-white text-[12px] font-medium rounded-[10px]"
                       onClick={(e) => {
                         e.stopPropagation();
                         setReviewEditModal({ isOpen: true, review });
@@ -509,20 +555,26 @@ export default function HomePage() {
             {favoriteReviews.map((restaurant) => (
               <Card
                 key={restaurant.id}
-                className={`relative overflow-hidden cursor-pointer transition-colors border-0 shadow-none w-full ${
-                  isDarkMode ? "bg-gray-800" : "bg-white"
-                } h-[82px]`}
+                className="relative overflow-hidden cursor-pointer w-full  transition-colors border-10 shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
                 onClick={() => handleFavoriteCardClick(restaurant.name)}
               >
-                <CardContent className="p-3 h-full relative">
+                <CardContent className="p-3 min-h-[90px] relative">
                   {/* 하트 아이콘 - 오른쪽 상단 */}
-                  <div className="absolute top-3 right-3">
+                  <div className="absolute top-3 right-3"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(restaurant.id);
+                  }}>
                     <Image
-                      src="/icons/heart-filled.svg"
+                      src={
+                        favoriteStates[restaurant.id]
+                          ? "/icons/heart-filled.svg"
+                          : "/icons/heart-unfilled.svg"
+                      }
                       alt="Heart"
                       width={20}
                       height={18}
-                      className="w-5 h-[18px]"
+                      className="w-5 h-[18px] cursor-pointe"
                     />
                   </div>
 
@@ -530,7 +582,7 @@ export default function HomePage() {
                   <div className="pr-8">
                     {/* 음식점 이름과 별점 */}
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-[11px] font-medium text-black leading-[13px]">
+                      <h3 className="text-[13.2px] font-medium text-[#333333] leading-[15.6px]">
                         {restaurant.name}
                       </h3>
                       <div className="flex items-center gap-1">
@@ -541,7 +593,7 @@ export default function HomePage() {
                           height={12}
                           className="w-3 h-3"
                         />
-                        <span className="text-[11px] font-medium text-black leading-[13px]">
+                        <span className="text-[13.2px] font-medium text-[#333333] leading-[15.6px]">
                           {restaurant.rating}
                         </span>
                       </div>
@@ -556,17 +608,17 @@ export default function HomePage() {
                         height={10}
                         className="w-[7px] h-[10px]"
                       />
-                      <span className="text-[8px] font-normal text-[#BCBCBC] leading-[9px]">
+                      <span className="text-[9.6px] font-normal text-[#BCBCBC] leading-[10.8px]">
                         {restaurant.location}
                       </span>
                     </div>
 
                     {/* 방문 정보 */}
                     <div className="space-y-1">
-                      <div className="text-[9px] font-medium text-[#333333] leading-[11px]">
+                      <div className="text-[10.8px] font-normal text-[#666666] leading-[13.2px]">
                         방문 횟수 : {restaurant.visitCount}회
                       </div>
-                      <div className="text-[9px] font-medium text-[#333333] leading-[11px]">
+                      <div className="text-[10.8px] font-normal text-[#666666] leading-[13.2px]">
                         최근 방문 : {restaurant.lastVisit}
                       </div>
                     </div>

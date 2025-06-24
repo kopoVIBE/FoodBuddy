@@ -25,6 +25,6 @@ public class Restaurant {
     @Column(name = "address", length = 255)
     private String address;
 
-    @Column(name = "location_id", length = 10)
+    @Column(name = "location_id", length = 20)
     private String locationId;
 }
