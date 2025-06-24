@@ -204,14 +204,18 @@ export default function StatisticsTab() {
 
         {/* 버디와의 */}
         <div className="absolute left-[66px] top-[19px] w-[207px] h-[14px]">
-          <h1 className="font-semibold text-base leading-[19px] text-[#333333]">
+          <h1 className={`text-lg font-bold ${
+              isDarkMode ? "text-white" : "text-gray-900"
+            }`}>
             버디와의
           </h1>
         </div>
 
         {/* 활동을 정리했어요! */}
         <div className="absolute left-[66px] top-[41px] w-[207px] h-[14px]">
-          <p className="font-medium text-sm leading-4 text-[#666666]">
+          <p className={`text-sm ${
+              isDarkMode ? "text-gray-300" : "text-gray-600"
+            }`}>
             활동을 정리했어요!
           </p>
         </div>
