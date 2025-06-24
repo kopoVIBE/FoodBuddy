@@ -50,8 +50,7 @@ export default function WritePage() {
   const [ocrCompleted, setOcrCompleted] = useState(false);
   const [ocrResult, setOcrResult] = useState<OCRResult | null>(null);
   const [isProcessingOCR, setIsProcessingOCR] = useState(false);
-  const [rating, setRating] = useState(4);
-  const [showRatingSection, setShowRatingSection] = useState(false);
+  const [rating, setRating] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // OCR API 호출 함수 (Spring Boot 백엔드)
@@ -154,12 +153,16 @@ export default function WritePage() {
       alert("말투를 선택해주세요!");
       return;
     }
+    if (!rating) {
+      alert("별점을 선택해주세요!");
+      return;
+    }
 
-    // 별점 선택 단계로 이동
-    setShowRatingSection(true);
+    // 바로 리뷰 생성으로 이동
+    await generateReviewContent();
   };
 
-  const handleRatingNext = async () => {
+  const generateReviewContent = async () => {
     if (!ocrResult) {
       alert("영수증 정보가 없습니다!");
       return;
@@ -218,6 +221,10 @@ export default function WritePage() {
   const handleModalComplete = () => {
     setOcrCompleted(true);
     setShowModal(false);
+  };
+
+  const handleRatingFromModal = (modalRating: number) => {
+    setRating(modalRating);
   };
 
   const copyToClipboard = () => {
@@ -281,8 +288,7 @@ export default function WritePage() {
         setSelectedTone("");
         setOcrCompleted(false);
         setAdditionalWords("");
-        setRating(4);
-        setShowRatingSection(false);
+        setRating(0);
 
         console.log("저장된 리뷰 정보:", response);
       } else {
@@ -413,52 +419,12 @@ export default function WritePage() {
           {/* 다음 단계 버튼 */}
           <Button
             onClick={handleNext}
-            disabled={!uploadedImage || !selectedTone || !ocrCompleted}
+            disabled={!uploadedImage || !selectedTone || !ocrCompleted || !rating}
             className="w-full bg-[#FF5722] hover:bg-[#E64A19] text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
             다음 단계
           </Button>
         </div>
-
-        {/* 별점 선택 섹션 */}
-        {showRatingSection && (
-          <div className="space-y-4 p-4 border-2 border-[#FF5722] rounded-lg bg-orange-50">
-            <div className="text-center">
-              <h3 className="font-medium text-gray-900 mb-4">
-                {ocrResult?.restaurantName || "식당"}의 별점을 남겨주세요
-              </h3>
-              
-              <div className="flex justify-center gap-2 mb-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    onClick={() => setRating(star)}
-                    className="p-1"
-                  >
-                    <Star
-                      className={`w-8 h-8 ${
-                        star <= rating
-                          ? "fill-[#FFDC17] text-[#FFDC17]"
-                          : "fill-none text-[#BCBCBC] stroke-[#BCBCBC] stroke-1"
-                      }`}
-                    />
-                  </button>
-                ))}
-              </div>
-              
-              <p className="text-sm text-gray-600 mb-4">
-                현재 선택: {rating}점
-              </p>
-              
-              <Button
-                onClick={handleRatingNext}
-                className="w-full bg-[#FF5722] hover:bg-[#E64A19] text-white"
-              >
-                리뷰 생성하기
-              </Button>
-            </div>
-          </div>
-        )}
 
         {/* OCR 결과 디버그 (개발용) */}
         {ocrResult && (
@@ -545,6 +511,7 @@ export default function WritePage() {
         ocrResult={ocrResult}
         isProcessingOCR={isProcessingOCR}
         onComplete={handleModalComplete}
+        onRatingChange={handleRatingFromModal}
       />
     </div>
   );
