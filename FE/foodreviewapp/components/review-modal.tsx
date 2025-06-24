@@ -422,6 +422,44 @@ export default function ReviewModal({
           </div>
         );
 
+      case 5:
+        return (
+          <div className="relative w-[370px] h-[250px] flex flex-col items-center justify-center">
+            {/* 아이콘 영역 - 로고와 편집 아이콘 함께 */}
+            <div className="flex justify-center items-center gap-3 mb-4">
+              <Image
+                src="/logo.svg"
+                alt="FoodBuddy Logo"
+                width={48}
+                height={48}
+                className="w-12 h-12"
+              />
+              <Image
+                src="/images/edit-icon.svg"
+                alt="Edit Icon"
+                width={39}
+                height={43}
+                className="w-10 h-11"
+              />
+            </div>
+
+            {/* 메인 텍스트 */}
+            <div className="text-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                버디가 영수증을 읽고 있어요!
+              </h3>
+              <p className="text-sm text-gray-600">잠시만 기다려주세요.</p>
+            </div>
+
+            {/* 로딩 애니메이션 */}
+            <div className="flex justify-center space-x-1">
+              <div className="w-2 h-2 bg-[#EB4C34] rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-[#EB4C34] rounded-full animate-bounce delay-100"></div>
+              <div className="w-2 h-2 bg-[#EB4C34] rounded-full animate-bounce delay-200"></div>
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }

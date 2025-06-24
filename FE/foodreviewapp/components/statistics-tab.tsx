@@ -19,70 +19,20 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import { getUserStatistics, UserStatisticsResponse } from "@/lib/api";
 
-// 임시 통계 데이터
-const categoryStats = [
-  { name: "한식", count: 8, color: "#EB4C34" },
-  { name: "양식", count: 5, color: "#EB4C34CC" },
-  { name: "일식", count: 4, color: "#EB4C3499" },
-  { name: "중식", count: 2, color: "#EB4C3466" },
-  { name: "카페", count: 3, color: "#EB4C3433" },
-];
-
-const monthlyStats = [
-  { month: "10월", reviews: 2 },
-  { month: "11월", reviews: 4 },
-  { month: "12월", reviews: 6 },
-  { month: "1월", reviews: 8 },
-  { month: "2월", reviews: 5 },
-  { month: "3월", reviews: 7 },
-];
-
-const ratingDistribution = [
-  { rating: "5점", count: 8 },
-  { rating: "4점", count: 12 },
-  { rating: "3점", count: 3 },
-  { rating: "2점", count: 1 },
-  { rating: "1점", count: 0 },
-];
-
-const topRestaurants = [
-  {
-    id: 1,
-    name: "맛있는 김치찌개",
-    category: "한식",
-    visitCount: 5,
-    avgRating: 4.8,
-    lastVisit: "2024-01-15",
-  },
-  {
-    id: 2,
-    name: "일본식 라멘",
-    category: "일식",
-    visitCount: 4,
-    avgRating: 4.5,
-    lastVisit: "2024-01-12",
-  },
-  {
-    id: 3,
-    name: "이탈리아 파스타",
-    category: "양식",
-    visitCount: 3,
-    avgRating: 4.2,
-    lastVisit: "2024-01-10",
-  },
-];
+// 색상 정의
+const BASE_COLOR = "#EB4C34";
+const OPACITY_LEVELS = ["FF", "CC", "99", "66", "33"]; // 100%, 80%, 60%, 40%, 20%
 
 export default function StatisticsTab() {
   const { isDarkMode } = useApp();
-  const totalReviews = 22;
-  const averageRating = 4.3;
-  const favoriteCategory = "한식";
-  const thisMonthReviews = 7;
-
-  // 툴팁 상태
+  const [statistics, setStatistics] = useState<UserStatisticsResponse | null>(
+    null
+  );
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTooltip, setActiveTooltip] = useState<{
     x: number;
     y: number;
@@ -90,8 +40,75 @@ export default function StatisticsTab() {
     type: string;
   } | null>(null);
 
+  // 데이터 로드
+  useEffect(() => {
+    const loadStatistics = async () => {
+      try {
+        const data = await getUserStatistics();
+        setStatistics(data);
+      } catch (error) {
+        console.error("통계 데이터 로드 실패:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadStatistics();
+  }, []);
+
+  if (isLoading || !statistics) {
+    return (
+      <div className="flex justify-center items-center h-[200px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex justify-center space-x-1">
+            <div className="w-2 h-2 bg-[#EB4C34] rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-[#EB4C34] rounded-full animate-bounce delay-100"></div>
+            <div className="w-2 h-2 bg-[#EB4C34] rounded-full animate-bounce delay-200"></div>
+          </div>
+          <p className="text-sm text-gray-600">통계를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 카테고리 데이터 변환
+  const categoryData = Object.entries(statistics.categoryDistribution)
+    .map(([name, count]) => ({
+      name,
+      count,
+    }))
+    .sort((a, b) => b.count - a.count) // 비중이 높은 순으로 정렬
+    .map((item, index) => ({
+      ...item,
+      color: `${BASE_COLOR}${
+        OPACITY_LEVELS[index] || OPACITY_LEVELS[OPACITY_LEVELS.length - 1]
+      }`,
+    }));
+
+  // 월별 데이터 변환 (최근 5개월)
+  const monthlyData = Object.entries(statistics.monthlyReviewCount)
+    .map(([yearMonth, count]) => {
+      const [year, month] = yearMonth.split("-");
+      return {
+        month: `${parseInt(month)}월`,
+        reviews: count,
+        yearMonth, // 정렬용
+      };
+    })
+    .sort((a, b) => b.yearMonth.localeCompare(a.yearMonth))
+    .slice(0, 5)
+    .reverse();
+
+  // 평점 분포 데이터 변환
+  const ratingData = Object.entries(statistics.ratingDistribution)
+    .map(([rating, count]) => ({
+      rating: `${rating}점`,
+      count,
+    }))
+    .sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+
   // 전체 카운트 계산
-  const totalCount = categoryStats.reduce((sum, item) => sum + item.count, 0);
+  const totalCount = categoryData.reduce((sum, item) => sum + item.count, 0);
 
   // 퍼센트 계산 함수
   const getPercentage = (count: number) => {
@@ -108,7 +125,6 @@ export default function StatisticsTab() {
       type: "category",
     });
 
-    // 3초 후 자동으로 숨김
     setTimeout(() => setActiveTooltip(null), 3000);
   };
 
@@ -156,7 +172,7 @@ export default function StatisticsTab() {
         break;
       case "rating":
         content = `${data.rating}: ${data.count}개 (${(
-          (data.count / totalReviews) *
+          (data.count / statistics.totalReviewCount) *
           100
         ).toFixed(1)}%)`;
         break;
@@ -189,9 +205,9 @@ export default function StatisticsTab() {
           outline: none !important;
         }
       `}</style>
+
       {/* 헤더 섹션 */}
       <div className="relative w-full h-[72px] mb-3">
-        {/* 로고 */}
         <div className="absolute left-[13px] top-[14px] w-[44px] h-[44px]">
           <Image
             src="/logo.svg"
@@ -202,20 +218,22 @@ export default function StatisticsTab() {
           />
         </div>
 
-        {/* 버디와의 */}
         <div className="absolute left-[66px] top-[19px] w-[207px] h-[14px]">
-          <h1 className={`text-lg font-bold ${
+          <h1
+            className={`text-lg font-bold ${
               isDarkMode ? "text-white" : "text-gray-900"
-            }`}>
+            }`}
+          >
             버디와의
           </h1>
         </div>
 
-        {/* 활동을 정리했어요! */}
         <div className="absolute left-[66px] top-[41px] w-[207px] h-[14px]">
-          <p className={`text-sm ${
+          <p
+            className={`text-sm ${
               isDarkMode ? "text-gray-300" : "text-gray-600"
-            }`}>
+            }`}
+          >
             활동을 정리했어요!
           </p>
         </div>
@@ -223,12 +241,12 @@ export default function StatisticsTab() {
       <Separator className={isDarkMode ? "bg-gray-700" : ""} />
 
       {/* 요약 통계 카드들 */}
-      <div className="flex justify-center items-center gap-3">
-        {/* 평균 평점 - 빨간색 배경 */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* 평균 평점 */}
         <div className="w-[164px] h-[71px] bg-[#EB4C34] border border-[#EB4C34] rounded-[10px] relative">
           <div className="absolute w-[62px] h-[25.82px] left-1/2 top-[12.52px] transform -translate-x-1/2">
             <div className="font-bold text-2xl leading-7 text-center text-white">
-              {averageRating}
+              {statistics.avgRating.toFixed(1)}
             </div>
           </div>
           <div className="absolute w-[46px] h-[15px] left-1/2 top-[43px] transform -translate-x-1/2">
@@ -238,11 +256,11 @@ export default function StatisticsTab() {
           </div>
         </div>
 
-        {/* 총 리뷰 수 - 흰색 배경 */}
+        {/* 총 리뷰 수 */}
         <div className="w-[164px] h-[71px] bg-[#EB4C34] border border-[#EB4C34] rounded-[10px] relative">
           <div className="absolute w-[62px] h-[25.82px] left-1/2 top-[12.52px] transform -translate-x-1/2">
             <div className="font-bold text-2xl leading-7 text-center text-white">
-              {totalReviews}
+              {statistics.totalReviewCount}
             </div>
           </div>
           <div className="absolute w-[46px] h-[15px] left-1/2 top-[43px] transform -translate-x-1/2">
@@ -254,9 +272,7 @@ export default function StatisticsTab() {
       </div>
 
       {/* 이번 달 활동 */}
-      <Card
-        className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]"
-      >
+      <Card className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <Calendar className="h-4 w-4 text-[#EB4C34]" />
@@ -270,7 +286,7 @@ export default function StatisticsTab() {
           </div>
           <div className="text-center">
             <div className="text-xl font-bold text-[#EB4C34] mb-1">
-              {thisMonthReviews}개
+              {statistics.thisMonthReviewCount}개
             </div>
             <p
               className={`text-xs ${
@@ -284,9 +300,7 @@ export default function StatisticsTab() {
       </Card>
 
       {/* 선호하는 음식 - 파이 차트 */}
-      <Card
-        className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]"
-      >
+      <Card className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp className="h-4 w-4 text-[#EB4C34]" />
@@ -304,7 +318,7 @@ export default function StatisticsTab() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={categoryStats}
+                  data={categoryData}
                   cx="50%"
                   cy="50%"
                   innerRadius={25}
@@ -316,7 +330,7 @@ export default function StatisticsTab() {
                   onClick={onPieClick}
                   style={{ cursor: "pointer" }}
                 >
-                  {categoryStats.map((entry, index) => (
+                  {categoryData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={entry.color}
@@ -330,7 +344,7 @@ export default function StatisticsTab() {
 
           {/* 범례 */}
           <div className="space-y-2">
-            {categoryStats.map((category, index) => (
+            {categoryData.map((category, index) => (
               <div
                 key={category.name}
                 className="flex items-center justify-between"
@@ -362,9 +376,7 @@ export default function StatisticsTab() {
       </Card>
 
       {/* 월별 리뷰 트렌드 - 라인 차트 */}
-      <Card
-        className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]"
-      >
+      <Card className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <Calendar className="h-4 w-4 text-[#EB4C34]" />
@@ -380,7 +392,7 @@ export default function StatisticsTab() {
           <div className="h-32">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={monthlyStats}
+                data={monthlyData}
                 onClick={onMonthlyClick}
                 margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
               >
@@ -427,9 +439,7 @@ export default function StatisticsTab() {
       </Card>
 
       {/* 평점 분포 - 바 차트 */}
-      <Card
-        className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]"
-      >
+      <Card className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <Star className="h-4 w-4 text-[#EB4C34]" />
@@ -445,7 +455,7 @@ export default function StatisticsTab() {
           <div className="h-32">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={ratingDistribution}
+                data={ratingData}
                 onClick={onRatingClick}
                 margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
               >
@@ -503,9 +513,9 @@ export default function StatisticsTab() {
           </div>
 
           <div className="space-y-3">
-            {topRestaurants.map((restaurant, index) => (
+            {statistics.topVisitedRestaurants.map((restaurant, index) => (
               <div
-                key={restaurant.id}
+                key={restaurant.name}
                 className="flex items-center gap-3 p-3 bg-[#EB4C3410] dark:bg-gray-700 rounded-lg"
               >
                 <div className="flex items-center justify-center w-6 h-6 bg-[#EB4C34] text-white rounded-full text-xs font-bold">
@@ -534,16 +544,6 @@ export default function StatisticsTab() {
                       {restaurant.visitCount}회 방문
                     </span>
                   </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="h-3 w-3 fill-[#EB4C34] text-[#EB4C34]" />
-                  <span
-                    className={`text-sm font-medium ${
-                      isDarkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    {restaurant.avgRating}
-                  </span>
                 </div>
               </div>
             ))}
