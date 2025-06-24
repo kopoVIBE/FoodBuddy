@@ -6,7 +6,7 @@ import axios, {
 
 // Axios 인스턴스 생성
 const axiosInstance = axios.create({
-  baseURL: "http://54.180.108.147:8080", //env.NEXT_PUBLIC_LOCAL_BACK_URL,
+  baseURL: "http://54.180.108.147:8080",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -17,7 +17,10 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // URL 로깅 추가
-    console.log("🔗 API Request URL:", config.baseURL + config.url);
+    console.log(
+      "🔗 API Request URL:",
+      `${config.baseURL ?? ""}${config.url ?? ""}`
+    );
     // 필요 시 삭제
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("accessToken");
@@ -260,13 +263,17 @@ export const getUserInfo = async (): Promise<UserInfoResponse> => {
 };
 
 // 사용자 정보 수정 API (닉네임)
-export const updateUserInfo = async (data: UserUpdateData): Promise<UserInfoResponse> => {
+export const updateUserInfo = async (
+  data: UserUpdateData
+): Promise<UserInfoResponse> => {
   const response = await axiosInstance.put("/api/users/me", data);
   return response.data;
 };
 
 // 비밀번호 변경 API
-export const changePassword = async (data: PasswordChangeData): Promise<string> => {
+export const changePassword = async (
+  data: PasswordChangeData
+): Promise<string> => {
   const response = await axiosInstance.put("/api/users/password", data);
   return response.data;
 };
