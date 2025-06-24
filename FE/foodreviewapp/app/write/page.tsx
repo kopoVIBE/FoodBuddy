@@ -60,16 +60,8 @@ export default function WritePage() {
   const processOCR = async (file: File) => {
     setIsProcessingOCR(true);
     try {
-      console.log("OCR 요청 시작:", file.name, file.size);
       const result = await apiProcessOCR(file);
       setOcrResult(result);
-      console.log("=== OCR 처리 완료 ===");
-      console.log("🏪 식당명:", result.restaurantName);
-      console.log("📍 주소:", result.address);
-      console.log("🍽️ 메뉴 항목들:", result.items);
-      console.log("💰 총 금액:", result.total);
-      console.log("📝 원본 텍스트:", result.text);
-      console.log("==================");
       
       // OCR 처리 완료 후 자동으로 다음 단계로 이동
       setTimeout(() => {
@@ -196,10 +188,7 @@ export default function WritePage() {
         additionalKeywords: additionalWords.trim() || undefined,
       };
 
-      console.log("리뷰 생성 요청:", reviewRequest);
-
       const response = await generateReview(reviewRequest);
-      console.log("리뷰 생성 완료:", response);
 
       // 리뷰와 카테고리 저장
       setGeneratedReview(response.review);
@@ -317,8 +306,6 @@ export default function WritePage() {
         rating: rating,
       };
 
-      console.log("리뷰 저장 요청:", reviewData);
-
       // API 호출
       const response = await saveCompleteReview(reviewData);
 
@@ -326,8 +313,6 @@ export default function WritePage() {
         alert(
           "리뷰가 성공적으로 저장되었습니다!"
         );
-
-        console.log("저장된 리뷰 정보:", response);
         
         // 홈 화면으로 이동
         router.push('/');

@@ -16,12 +16,6 @@ const axiosInstance = axios.create({
 // 요청 인터셉터 - 토큰이 있으면 헤더에 추가
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // URL 로깅 추가
-    console.log(
-      "🔗 API Request URL:",
-      `${config.baseURL ?? ""}${config.url ?? ""}`
-    );
-    // 필요 시 삭제
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("accessToken");
       if (token) {
@@ -261,7 +255,6 @@ ${
         category: parsedResponse.category,
       };
     } catch (error) {
-      console.error("AI 응답 파싱 실패:", error);
       // 파싱 실패 시 기본값 반환
       return {
         review: generatedContent.substring(0, 150),
@@ -398,9 +391,7 @@ export const getMyReviews = async (
 // 리뷰 삭제 API
 export const deleteReview = async (reviewId: string): Promise<void> => {
   try {
-    console.log("리뷰 삭제 요청:", reviewId);
     await axiosInstance.delete(`/api/reviews/${reviewId}`);
-    console.log("리뷰 삭제 성공:", reviewId);
   } catch (error) {
     console.error("리뷰 삭제 실패:", error);
     throw error;
@@ -436,9 +427,7 @@ export const getMyFavorites = async (): Promise<FavoriteResponse[]> => {
 // 즐겨찾기 추가
 export const addFavorite = async (restaurantId: string): Promise<void> => {
   try {
-    console.log("즐겨찾기 추가 요청:", restaurantId);
     await axiosInstance.post(`/api/favorites/${restaurantId}`);
-    console.log("즐겨찾기 추가 성공:", restaurantId);
   } catch (error) {
     console.error("즐겨찾기 추가 실패:", error);
     throw error;
@@ -448,9 +437,7 @@ export const addFavorite = async (restaurantId: string): Promise<void> => {
 // 즐겨찾기 제거
 export const removeFavorite = async (restaurantId: string): Promise<void> => {
   try {
-    console.log("즐겨찾기 제거 요청:", restaurantId);
     await axiosInstance.delete(`/api/favorites/${restaurantId}`);
-    console.log("즐겨찾기 제거 성공:", restaurantId);
   } catch (error) {
     console.error("즐겨찾기 제거 실패:", error);
     throw error;
@@ -469,7 +456,6 @@ export const getMyFavoriteRestaurants = async (): Promise<
 > => {
   try {
     const response = await axiosInstance.get("/api/favorites/me/details");
-    console.log("즐겨찾기 API 응답:", response.data);
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error("즐겨찾기 API 호출 실패:", error);
@@ -491,7 +477,6 @@ export interface RestaurantResponse {
 export const getAllRestaurants = async (): Promise<RestaurantResponse[]> => {
   try {
     const response = await axiosInstance.get("/api/restaurants");
-    console.log("모든 레스토랑 API 응답:", response.data);
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error("모든 레스토랑 API 호출 실패:", error);
@@ -505,7 +490,6 @@ export const getVisitedRestaurants = async (): Promise<
 > => {
   try {
     const response = await axiosInstance.get("/api/restaurants/visited");
-    console.log("방문한 레스토랑 API 응답:", response.data);
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error("방문한 레스토랑 API 호출 실패:", error);
@@ -575,7 +559,6 @@ export interface UserStatisticsResponse {
 export const getUserStatistics = async (): Promise<UserStatisticsResponse> => {
   try {
     const response = await axiosInstance.get("/api/statistics/me");
-    console.log("통계 API 응답:", response.data);
     return response.data;
   } catch (error) {
     console.error("통계 API 호출 실패:", error);
