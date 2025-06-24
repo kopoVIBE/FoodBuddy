@@ -18,7 +18,6 @@ env:
   EC2_HOST: ${{ secrets.EC2_HOST }}
   EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
   EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-  NEXT_PUBLIC_LOCAL_BACK_URL: ${{ secrets.NEXT_PUBLIC_LOCAL_BACK_URL }}
 
 permissions:
   contents: read
@@ -28,8 +27,6 @@ jobs:
   build-frontend:
     name: 🎨 프론트엔드 빌드
     runs-on: ubuntu-latest
-    env:
-      NEXT_PUBLIC_LOCAL_BACK_URL: ${{ secrets.NEXT_PUBLIC_LOCAL_BACK_URL }}
     steps:
       - name: 🧹 디스크 공간 확보
         run: |
