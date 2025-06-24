@@ -13,9 +13,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { User, Bell, Palette } from "lucide-react";
+import { User, Bell, Palette, Lock } from "lucide-react";
 import { useApp } from "@/contexts/app-context";
-import ProfileEditModal from "@/components/profile-edit-modal";
+import NicknameEditModal from "@/components/nickname-edit-modal";
+import PasswordChangeModal from "@/components/password-change-modal";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -36,7 +37,8 @@ export default function SettingsPage() {
   const [autoOCR, setAutoOCR] = useState(true);
   const [reviewReminder, setReviewReminder] = useState(true);
   const [recommendationAlerts, setRecommendationAlerts] = useState(true);
-  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showNicknameModal, setShowNicknameModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   return (
     <div
@@ -45,7 +47,10 @@ export default function SettingsPage() {
       }`}
     >
       <div className="max-w-md mx-auto px-4 py-6 space-y-6">
-      <div className="flex items-center gap-4">
+        {/* 사용자 정보 카드 */}
+        <Card className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4 mb-4">
               <div className="w-16 h-16 bg-[#FFF6EA] rounded-full flex items-center justify-center">
                 <Image
                   src="/logo.svg"
@@ -69,19 +74,33 @@ export default function SettingsPage() {
                     : "로그인이 필요합니다"}
                 </p>
               </div>
-              <Button
-  size="sm"
-  onClick={() => setShowProfileModal(true)}
-  className="h-[22px] px-3 bg-[#BCBCBC] hover:bg-gray-300 text-white text-[12px] font-medium rounded-[10px]"
->
-  수정
-</Button>
-
             </div>
+
+            {/* 사용자 정보 수정 버튼들 */}
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowNicknameModal(true)}
+                className="w-full justify-start h-[40px] border-[#BCBCBC]"
+              >
+                <User className="w-4 h-4 mr-2" />
+                닉네임 변경
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowPasswordModal(true)}
+                className="w-full justify-start h-[40px] border-[#BCBCBC]"
+              >
+                <Lock className="w-4 h-4 mr-2" />
+                비밀번호 변경
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* 앱 설정 */}
         <Card className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]">
-          <CardContent>
+          <CardContent className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <Label className={isDarkMode ? "text-white" : ""}>
@@ -102,6 +121,7 @@ export default function SettingsPage() {
               />
             </div>
 
+            <Separator />
 
             <div>
               <Label className={isDarkMode ? "text-white" : ""}>언어</Label>
@@ -132,29 +152,36 @@ export default function SettingsPage() {
               </Select>
             </div>
 
+            <Separator />
+
             {/* 로그아웃 버튼 */}
             <div className="pt-2">
-            <Button
-  onClick={() => {
-    logout();
-    router.replace("/auth");
-  }}
-  className="w-full text-white font-semibold hover:opacity-90"
-  style={{ backgroundColor: "#EB4C34" }}
->
-  로그아웃
-</Button>
-
+              <Button
+                onClick={() => {
+                  logout();
+                  router.replace("/auth");
+                }}
+                className="w-full text-white font-semibold hover:opacity-90"
+                style={{ backgroundColor: "#EB4C34" }}
+              >
+                로그아웃
+              </Button>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* 프로필 편집 모달 */}
-      <ProfileEditModal
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
+      {/* 닉네임 수정 모달 */}
+      <NicknameEditModal
+        isOpen={showNicknameModal}
+        onClose={() => setShowNicknameModal(false)}
         nickname={nickname ?? ""}
+      />
+
+      {/* 비밀번호 변경 모달 */}
+      <PasswordChangeModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
       />
     </div>
   );
