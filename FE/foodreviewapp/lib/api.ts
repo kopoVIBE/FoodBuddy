@@ -429,4 +429,76 @@ export const getMyFavoriteRestaurants = async (): Promise<FavoriteRestaurantInfo
   }
 };
 
+// 레스토랑 관련 API
+export interface RestaurantResponse {
+  restaurantId: string;
+  name: string;
+  category: string;
+  address: string;
+  locationId: string;
+}
+
+// 모든 레스토랑 조회
+export const getAllRestaurants = async (): Promise<RestaurantResponse[]> => {
+  try {
+    const response = await axiosInstance.get('/api/restaurants');
+    console.log('모든 레스토랑 API 응답:', response.data);
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('모든 레스토랑 API 호출 실패:', error);
+    return [];
+  }
+};
+
+// 방문한 레스토랑 조회
+export const getVisitedRestaurants = async (): Promise<RestaurantResponse[]> => {
+  try {
+    const response = await axiosInstance.get('/api/restaurants/visited');
+    console.log('방문한 레스토랑 API 응답:', response.data);
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('방문한 레스토랑 API 호출 실패:', error);
+    return [];
+  }
+};
+
+// 카카오 지도 API를 사용한 주소 -> 좌표 변환
+export const getCoordinatesFromAddress = async (address: string): Promise<{lat: number, lng: number} | null> => {
+  const kakaoApiKey = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
+  if (!kakaoApiKey) {
+    console.error('카카오 REST API 키가 설정되지 않았습니다.');
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`,
+      {
+        headers: {
+          'Authorization': `KakaoAK ${kakaoApiKey}`
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.documents && data.documents.length > 0) {
+      const result = data.documents[0];
+      return {
+        lat: parseFloat(result.y),
+        lng: parseFloat(result.x)
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('주소 좌표 변환 실패:', error);
+    return null;
+  }
+};
+
 export default axiosInstance;
