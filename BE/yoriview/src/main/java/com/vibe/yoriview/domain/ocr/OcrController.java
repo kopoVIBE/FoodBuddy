@@ -23,10 +23,10 @@ public class OcrController {
     private final ObjectMapper objectMapper = new ObjectMapper();
     
     // OCR 입력/출력 디렉토리 경로
-    private final String OCR_BASE_PATH = System.getProperty("user.dir") + "/ocr";
-    private final String INPUT_DIR = OCR_BASE_PATH + "/input";
-    private final String OUTPUT_DIR = OCR_BASE_PATH + "/output";
-    private final String PYTHON_SCRIPT_PATH = OCR_BASE_PATH + "/ocr-parser.py";
+    private final String OCR_BASE_PATH = System.getProperty("user.dir");
+    private final String PYTHON_SCRIPT_PATH = OCR_BASE_PATH + "/BE/yoriview/ocr/ocr-parser.py";
+    private final String INPUT_DIR = OCR_BASE_PATH + "/ocr/input";
+    private final String OUTPUT_DIR = OCR_BASE_PATH + "/ocr/output";
 
     @RequestMapping(value = "/process", method = RequestMethod.OPTIONS)
     public ResponseEntity<?> handleOptions() {
@@ -91,6 +91,34 @@ public class OcrController {
     }
 
     private String saveImageFile(MultipartFile file) throws IOException {
+        // 먼저 input 디렉토리의 모든 파일 삭제
+        Path inputDirPath = Paths.get(INPUT_DIR);
+        if (Files.exists(inputDirPath)) {
+            Files.list(inputDirPath)
+                .forEach(path -> {
+                    try {
+                        Files.delete(path);
+                        log.info("기존 파일 삭제: {}", path);
+                    } catch (IOException e) {
+                        log.warn("파일 삭제 실패: {}", path);
+                    }
+                });
+        }
+
+        // output 디렉토리의 모든 파일도 삭제
+        Path outputDirPath = Paths.get(OUTPUT_DIR);
+        if (Files.exists(outputDirPath)) {
+            Files.list(outputDirPath)
+                .forEach(path -> {
+                    try {
+                        Files.delete(path);
+                        log.info("기존 결과 파일 삭제: {}", path);
+                    } catch (IOException e) {
+                        log.warn("결과 파일 삭제 실패: {}", path);
+                    }
+                });
+        }
+
         // 파일 확장자 추출
         String originalFilename = file.getOriginalFilename();
         String extension = "jpg"; // 기본값
@@ -102,11 +130,9 @@ public class OcrController {
         String fileName = "receipt." + extension;
         Path filePath = Paths.get(INPUT_DIR, fileName);
         
-        // 기존 파일이 있으면 삭제
-        Files.deleteIfExists(filePath);
-        
         // 새 파일 저장
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        log.info("새 파일 저장됨: {}", filePath);
         
         return filePath.toString();
     }
@@ -120,12 +146,16 @@ public class OcrController {
                 return new ProcessResult(false, "Python 스크립트 파일을 찾을 수 없습니다", "");
             }
 
-            ProcessBuilder processBuilder = new ProcessBuilder("python3", PYTHON_SCRIPT_PATH);
+            // Windows와 Unix 환경에서 모두 작동하도록 Python 명령어 설정
+            String pythonCommand = System.getProperty("os.name").toLowerCase().contains("win") ? "python" : "python3";
+            
+            ProcessBuilder processBuilder = new ProcessBuilder(pythonCommand, PYTHON_SCRIPT_PATH);
             processBuilder.directory(new File(OCR_BASE_PATH));
             processBuilder.redirectErrorStream(true);
             
             log.info("Python 스크립트 실행 시작: {}", PYTHON_SCRIPT_PATH);
             log.info("작업 디렉토리: {}", OCR_BASE_PATH);
+            log.info("Python 명령어: {}", pythonCommand);
             
             Process process = processBuilder.start();
             

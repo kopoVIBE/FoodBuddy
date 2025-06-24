@@ -1,0 +1,11 @@
+{
+    "storeName": "페이히어 카페",
+    "address": "서울특별시 강남구 강남대로 374 16층",
+    "menuItems": [
+        {
+            "name": "Americano",
+            "price": 5000
+        }
+    ],
+    "totalPrice": 5000
+}
