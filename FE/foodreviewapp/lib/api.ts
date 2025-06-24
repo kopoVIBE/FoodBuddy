@@ -6,7 +6,7 @@ import axios, {
 
 // Axios 인스턴스 생성
 const axiosInstance = axios.create({
-  baseURL: process.env.ㅗㅅ세, //,
+  baseURL: process.env.NEXT_PUBLIC_LOCAL_BACK_URL, //,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -16,7 +16,7 @@ const axiosInstance = axios.create({
 // 요청 인터셉터 - 토큰이 있으면 헤더에 추가
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // URL 로깅 추가!
+    // URL 로깅 추가
     console.log("🔗 API Request URL:", config.baseURL + config.url);
     // 필요 시 삭제
     if (typeof window !== "undefined") {
