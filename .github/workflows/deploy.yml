@@ -112,37 +112,8 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: 🚀 EC2 배포
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ env.EC2_HOST }}
-          username: ${{ env.EC2_USERNAME }}
-          key: ${{ env.EC2_SSH_KEY }}
-          script: |
-            echo "🎬 EC2 배포 시작: $(date)"
-
-            cd ~/foodbuddy
-
-            # 환경변수 설정
-            echo "ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}" > .env
-            echo "ECR_REPOSITORY_FRONTEND=${{ env.ECR_REPOSITORY_FRONTEND }}" >> .env
-            echo "ECR_REPOSITORY_BACKEND=${{ env.ECR_REPOSITORY_BACKEND }}" >> .env
-            echo "IMAGE_TAG=${{ github.sha }}" >> .env
-
-            echo "🔑 ECR 로그인"
-            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
-
-            echo "🔄 컨테이너 재시작"
-            docker-compose pull
-            docker-compose down || true
-            docker-compose up -d
-
-            echo "🔍 컨테이너 상태 확인"
-            docker ps
-
-            echo "✅ 배포 완료: $(date)"
-
-      - name: 📄 docker-compose.yml 복사
+      # 1. 먼저 설정 파일 복사
+      - name: 📄 설정 파일 복사
         uses: appleboy/scp-action@master
         with:
           host: ${{ env.EC2_HOST }}
@@ -152,15 +123,48 @@ jobs:
           target: "~/foodbuddy"
           overwrite: true
 
-      - name: 🔄 컨테이너 재시작
+      # 2. 배포 실행
+      - name: 🚀 배포 실행
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.EC2_HOST }}
           username: ${{ env.EC2_USERNAME }}
           key: ${{ env.EC2_SSH_KEY }}
           script: |
+            echo "🎬 배포 시작: $(date)"
+
+            # 작업 디렉토리로 이동
             cd ~/foodbuddy
-            docker-compose pull
-            docker-compose down || true
-            docker-compose up -d
+
+            # 이전 컨테이너 상태 확인
+            echo "📊 이전 컨테이너 상태:"
             docker ps
+
+            # 환경변수 설정
+            echo "🔧 환경변수 설정"
+            echo "ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}" > .env
+            echo "ECR_REPOSITORY_FRONTEND=${{ env.ECR_REPOSITORY_FRONTEND }}" >> .env
+            echo "ECR_REPOSITORY_BACKEND=${{ env.ECR_REPOSITORY_BACKEND }}" >> .env
+            echo "IMAGE_TAG=${{ github.sha }}" >> .env
+
+            # ECR 로그인
+            echo "🔑 ECR 로그인"
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+
+            # 새 이미지 다운로드
+            echo "⬇️ 새 이미지 다운로드"
+            docker-compose pull
+
+            # 컨테이너 재시작
+            echo "🔄 컨테이너 재시작"
+            docker-compose down --remove-orphans || true
+            docker-compose up -d
+
+            # 배포 결과 확인
+            echo "✅ 배포 완료: $(date)"
+            echo "📊 새 컨테이너 상태:"
+            docker ps
+
+            # 사용하지 않는 이미지 정리
+            echo "🧹 미사용 이미지 정리"
+            docker image prune -f
