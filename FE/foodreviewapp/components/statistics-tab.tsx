@@ -95,9 +95,8 @@ export default function StatisticsTab() {
         yearMonth, // 정렬용
       };
     })
-    .sort((a, b) => b.yearMonth.localeCompare(a.yearMonth))
-    .slice(0, 5)
-    .reverse();
+    .sort((a, b) => a.yearMonth.localeCompare(b.yearMonth))
+    .slice(-5);
 
   // 평점 분포 데이터 변환
   const ratingData = Object.entries(statistics.ratingDistribution)
@@ -129,12 +128,19 @@ export default function StatisticsTab() {
   };
 
   // 월별 차트 클릭 핸들러
-  const onMonthlyClick = (data: any, event: any) => {
-    const rect = event.target.getBoundingClientRect();
+  const onMonthlyClick = (data: any) => {
+    if (!data || !data.activePayload || !data.activePayload[0]) return;
+
+    const clickedData = data.activePayload[0].payload;
+    const element = document.querySelector(".recharts-wrapper");
+    if (!element) return;
+
+    const rect = element.getBoundingClientRect();
+
     setActiveTooltip({
-      x: rect.left + rect.width / 2,
-      y: rect.top - 10,
-      data: data,
+      x: data.chartX,
+      y: rect.top,
+      data: clickedData,
       type: "monthly",
     });
 
@@ -142,12 +148,19 @@ export default function StatisticsTab() {
   };
 
   // 평점 차트 클릭 핸들러
-  const onRatingClick = (data: any, event: any) => {
-    const rect = event.target.getBoundingClientRect();
+  const onRatingClick = (data: any) => {
+    if (!data || !data.activePayload || !data.activePayload[0]) return;
+
+    const clickedData = data.activePayload[0].payload;
+    const element = document.querySelector(".recharts-wrapper");
+    if (!element) return;
+
+    const rect = element.getBoundingClientRect();
+
     setActiveTooltip({
-      x: rect.left + rect.width / 2,
-      y: rect.top - 10,
-      data: data,
+      x: data.chartX,
+      y: rect.top,
+      data: clickedData,
       type: "rating",
     });
 
@@ -156,25 +169,25 @@ export default function StatisticsTab() {
 
   // 커스텀 툴팁 렌더링
   const renderTooltip = () => {
-    if (!activeTooltip) return null;
+    if (!activeTooltip || !activeTooltip.data) return null;
 
     const { x, y, data, type } = activeTooltip;
 
     let content = "";
     switch (type) {
-      case "category":
-        content = `${data.name}: ${data.count}회 (${getPercentage(
-          data.count
-        )}%)`;
-        break;
       case "monthly":
         content = `${data.month}: ${data.reviews}개 리뷰`;
         break;
       case "rating":
-        content = `${data.rating}: ${data.count}개 (${(
+        content = `${data.rating}점: ${data.count}개 (${(
           (data.count / statistics.totalReviewCount) *
           100
         ).toFixed(1)}%)`;
+        break;
+      case "category":
+        content = `${data.name}: ${data.count}회 (${getPercentage(
+          data.count
+        )}%)`;
         break;
     }
 
@@ -191,8 +204,6 @@ export default function StatisticsTab() {
       </div>
     );
   };
-
-  // ... existing code ...
 
   // 파이 차트 렌더링 함수
   const renderPieChart = () => {
@@ -257,9 +268,13 @@ export default function StatisticsTab() {
           ) : (
             <LineChart
               data={monthlyData}
-              onClick={onMonthlyClick}
               margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+              onClick={onMonthlyClick}
             >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke={isDarkMode ? "#374151" : "#f3f4f6"}
+              />
               <XAxis
                 dataKey="month"
                 tick={{
@@ -293,6 +308,7 @@ export default function StatisticsTab() {
                   fill: "#EB4C34",
                   strokeWidth: 2,
                   r: 4,
+                  cursor: "pointer",
                 }}
                 animationDuration={1000}
               />
@@ -321,8 +337,8 @@ export default function StatisticsTab() {
           ) : (
             <BarChart
               data={ratingData}
-              onClick={onRatingClick}
               margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+              onClick={onRatingClick}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -351,7 +367,7 @@ export default function StatisticsTab() {
                 fill="#EB4C34"
                 radius={[2, 2, 0, 0]}
                 animationDuration={800}
-                style={{ cursor: "pointer", outline: "none" }}
+                cursor="pointer"
               />
             </BarChart>
           )}
@@ -360,8 +376,6 @@ export default function StatisticsTab() {
     );
   };
 
-  // ... rest of the existing code ...
-  // ... existing code ...
   return (
     <div className="space-y-4" style={{ outline: "none" }}>
       <style jsx>{`
@@ -570,40 +584,58 @@ export default function StatisticsTab() {
           </div>
 
           <div className="space-y-3">
-            {statistics.topVisitedRestaurants.map((restaurant, index) => (
-              <div
-                key={restaurant.name}
-                className="flex items-center gap-3 p-3 bg-[#EB4C3410] dark:bg-gray-700 rounded-lg"
-              >
-                <div className="flex items-center justify-center w-6 h-6 bg-[#EB4C34] text-white rounded-full text-xs font-bold">
-                  {index + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4
-                    className={`font-medium text-sm truncate ${
-                      isDarkMode ? "text-white" : "text-gray-900"
-                    }`}
-                  >
-                    {restaurant.name}
-                  </h4>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge
-                      variant="secondary"
-                      className="text-xs bg-[#EB4C3420] text-[#EB4C34] border-[#EB4C3440]"
-                    >
-                      {restaurant.category}
-                    </Badge>
-                    <span
-                      className={`text-xs ${
-                        isDarkMode ? "text-gray-300" : "text-gray-600"
+            {statistics.topVisitedRestaurants.length === 0 ? (
+              <div className="text-center py-4">
+                <p
+                  className={`text-sm ${
+                    isDarkMode ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  아직 방문한 음식점이 없어요!
+                </p>
+              </div>
+            ) : (
+              statistics.topVisitedRestaurants.map((restaurant, index) => (
+                <div
+                  key={restaurant.name}
+                  className="flex items-center gap-3 p-3 bg-[#EB4C3410] dark:bg-gray-700 rounded-lg"
+                >
+                  <div className="flex items-center justify-center w-6 h-6 bg-[#EB4C34] text-white rounded-full text-xs font-bold">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4
+                      className={`font-medium text-sm truncate ${
+                        isDarkMode ? "text-white" : "text-gray-900"
                       }`}
                     >
-                      {restaurant.visitCount}회 방문
-                    </span>
+                      {restaurant.name}
+                    </h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-[#EB4C3420] text-[#EB4C34] border-[#EB4C3440]"
+                      >
+                        {restaurant.category}
+                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3 h-3 fill-[#FFDC17] text-[#FFDC17]" />
+                        <span className="text-xs text-gray-600">
+                          {restaurant.rating.toFixed(1)}
+                        </span>
+                      </div>
+                      <span
+                        className={`text-xs ${
+                          isDarkMode ? "text-gray-300" : "text-gray-600"
+                        }`}
+                      >
+                        {restaurant.visitCount}회 방문
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>

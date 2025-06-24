@@ -545,13 +545,14 @@ export interface UserStatisticsResponse {
   totalReviewCount: number;
   avgRating: number;
   thisMonthReviewCount: number;
+  categoryDistribution: { [key: string]: number };
   monthlyReviewCount: { [key: string]: number };
   ratingDistribution: { [key: string]: number };
-  categoryDistribution: { [key: string]: number };
   topVisitedRestaurants: Array<{
     name: string;
     category: string;
     visitCount: number;
+    rating: number;
   }>;
 }
 
