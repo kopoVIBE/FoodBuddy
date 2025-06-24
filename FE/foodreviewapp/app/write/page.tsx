@@ -325,7 +325,10 @@ export default function WritePage() {
         <Card className="border-2 border-dashed border-gray-300 bg-white">
           <CardContent className="p-8 text-center">
             {uploadedImage ? (
-              <div className="space-y-4">
+              <div 
+                className="space-y-4 cursor-pointer"
+                onClick={handleUploadClick}
+              >
                 <Image
                   src={uploadedImage || "/placeholder.svg"}
                   alt="업로드된 영수증"
@@ -344,11 +347,17 @@ export default function WritePage() {
                       <p className="text-sm text-gray-600">영수증 분석 중...</p>
                     </div>
                   ) : ocrResult ? (
-                    <p className="text-sm text-green-600">영수증 분석 완료 ✓</p>
+                    <div className="space-y-1">
+                      <p className="text-sm text-green-600">영수증 분석 완료 ✓</p>
+                      <p className="text-xs text-gray-500">클릭하여 다시 업로드</p>
+                    </div>
                   ) : (
-                    <p className="text-sm text-gray-600">
-                      영수증이 업로드되었습니다
-                    </p>
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600">
+                        영수증이 업로드되었습니다
+                      </p>
+                      <p className="text-xs text-gray-500">클릭하여 다시 업로드</p>
+                    </div>
                   )}
                 </div>
               </div>
