@@ -6,7 +6,7 @@ import axios, {
 
 // Axios 인스턴스 생성
 const axiosInstance = axios.create({
-  baseURL: process."http://54.180.108.147:8080",//env.NEXT_PUBLIC_LOCAL_BACK_URL, 
+  baseURL: "http://54.180.108.147:8080", //env.NEXT_PUBLIC_LOCAL_BACK_URL,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
