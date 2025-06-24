@@ -68,6 +68,11 @@ export default function WritePage() {
       console.log("💰 총 금액:", result.total);
       console.log("📝 원본 텍스트:", result.text);
       console.log("==================");
+      
+      // OCR 처리 완료 후 자동으로 다음 단계로 이동
+      setTimeout(() => {
+        setModalStep(1); // 정보 확인 단계로 이동
+      }, 1000); // 1초 후 자동 이동
     } catch (error: any) {
       console.error("=== OCR 처리 중 오류 ===");
       console.error("Error:", error);
@@ -85,6 +90,7 @@ export default function WritePage() {
       }
 
       alert(errorMessage + " 다시 시도해주세요.");
+      setShowModal(false); // 오류 발생 시 모달 닫기
     } finally {
       setIsProcessingOCR(false);
     }
@@ -127,13 +133,13 @@ export default function WritePage() {
       const resizedImage = await resizeImage(file);
       setUploadedImage(resizedImage);
 
+      // OCR 처리 시작 전에 분석 모달 표시
+      setShowModal(true);
+      setModalStep(5); // 영수증 분석 중 모달
+      setOcrCompleted(false);
+
       // OCR 처리 시작 (원본 파일 사용)
       await processOCR(file);
-
-      // OCR 처리 완료 후 모달 표시
-      setShowModal(true);
-      setModalStep(1);
-      setOcrCompleted(false);
     }
   };
 
