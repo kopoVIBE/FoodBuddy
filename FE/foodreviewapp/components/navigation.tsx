@@ -38,7 +38,7 @@ export default function Navigation() {
                 href={href}
                 className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors relative ${
                   isActive
-                    ? "text-[#EB4C34]"
+                    ? "text-[#EB4C34] !important"
                     : `${
                         isDarkMode
                           ? "text-gray-400 hover:text-gray-200"
@@ -60,7 +60,7 @@ export default function Navigation() {
                   }`}
                   style={{
                     filter: isActive
-                      ? "brightness(0) saturate(100%) invert(24%) sepia(85%) saturate(2270%) hue-rotate(351deg) brightness(96%) contrast(95%)"
+                      ? "invert(45%) sepia(83%) saturate(2160%) hue-rotate(341deg) brightness(97%) contrast(98%)"
                       : undefined,
                   }}
                 />
