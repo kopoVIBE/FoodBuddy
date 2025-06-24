@@ -18,7 +18,7 @@ env:
   EC2_HOST: ${{ secrets.EC2_HOST }}
   EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
   EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-
+  NEXT_PUBLIC_OPENAI_API_KEY: ${{ secrets.NEXT_PUBLIC_OPENAI_API_KEY }}
 permissions:
   contents: read
 
@@ -95,6 +95,8 @@ jobs:
           echo "CLOVA_OCR_APIGW_INVOKE_URL=${{ secrets.CLOVA_OCR_APIGW_INVOKE_URL }}" >> .env
           echo "GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}" >> .env
 
+
+
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG . 2>&1 | tee backend_build.log
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG
           echo "✅ 백엔드 빌드 완료: $(date)"
@@ -161,10 +163,6 @@ jobs:
             echo "CLOVA_OCR_SECRET_KEY=${{ secrets.CLOVA_OCR_SECRET_KEY }}" >> .env
             echo "CLOVA_OCR_APIGW_INVOKE_URL=${{ secrets.CLOVA_OCR_APIGW_INVOKE_URL }}" >> .env
             echo "GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}" >> .env
-
-            # OpenAI API Key 추가
-            echo "🤖 OpenAI API Key 추가"
-            echo "NEXT_PUBLIC_OPENAI_API_KEY=${{ secrets.NEXT_PUBLIC_OPENAI_API_KEY }}" >> .env
 
             # ECR 로그인
             echo "🔑 ECR 로그인"
