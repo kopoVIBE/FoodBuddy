@@ -20,7 +20,7 @@ COPY --from=builder /app/build/libs/*.jar app.jar
 # OCR 디렉토리 구조 설정
 RUN mkdir -p /app/ocr/input /app/ocr/output
 COPY --from=builder /app/ocr/ocr-parser.py /app/ocr/
-COPY --from=builder /app/ocr/.env /app/ocr/
+COPY --from=builder /app/.env /app/ocr/
 
 # Python 패키지 설치
 RUN pip3 install python-dotenv requests google-generativeai
