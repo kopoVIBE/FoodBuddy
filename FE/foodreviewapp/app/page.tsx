@@ -128,6 +128,8 @@ export default function HomePage() {
     isDarkMode,
     nickname,
     isAuthenticated: globalIsAuthenticated,
+    setUserInfo,
+    logout,
   } = useApp();
   const router = useRouter();
   const [showSplash, setShowSplash] = useState(false);
@@ -307,25 +309,28 @@ export default function HomePage() {
         hasShownSplash,
       });
 
-      if (!authToken) {
-        setIsLoading(false);
-        router.replace("/auth");
-        return;
-      }
-
       if (!hasShownSplash) {
         setShowSplash(true);
         setTimeout(() => {
           setShowSplash(false);
           setIsLoading(false);
           sessionStorage.setItem("hasShownSplash", "true");
-          fetchMyReviews();
-          fetchFavoriteRestaurants();
+          if (!authToken) {
+            router.replace("/auth");
+          } else {
+            fetchMyReviews();
+            fetchFavoriteRestaurants();
+          }
         }, 3000);
       } else {
-        setIsLoading(false);
-        fetchMyReviews();
-        fetchFavoriteRestaurants();
+        if (!authToken) {
+          setIsLoading(false);
+          router.replace("/auth");
+        } else {
+          setIsLoading(false);
+          fetchMyReviews();
+          fetchFavoriteRestaurants();
+        }
       }
     };
 
@@ -452,14 +457,14 @@ export default function HomePage() {
                   isDarkMode ? "text-white" : "text-gray-900"
                 }`}
               >
-                안녕하세요! {nickname || "게스트"}님
+                {t("hello").replace("마틸", nickname || "게스트")}
               </h1>
               <p
                 className={`text-sm ${
                   isDarkMode ? "text-gray-300" : "text-gray-600"
                 }`}
               >
-                오늘도 맛있는 하루 되세요
+                {t("goodDay")}
               </p>
             </div>
           </div>

@@ -25,7 +25,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "@/components/ui/use-toast";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -115,20 +114,31 @@ export default function AuthPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+
     try {
-      setIsLoading(true);
-      const response = await login(loginData);
-      localStorage.setItem("accessToken", response.token);
-      localStorage.setItem("nickname", response.nickname);
+      const loginPayload: LoginData = {
+        email: loginData.email,
+        password: loginData.password,
+      };
+
+      console.log("로그인 시도:", loginPayload);
+      const response = await login(loginPayload);
+      console.log("로그인 성공:", response);
+
+      // 중앙 저장소에 사용자 정보 저장
       setUserInfo(response.nickname, response.token);
+
+      // 로딩 페이지로 이동
       router.push("/loading");
-    } catch (error) {
+
+      // 잠시 후 지도 페이지로 이동
+      setTimeout(() => {
+        router.replace("/map");
+      }, 2000);
+    } catch (error: any) {
       console.error("로그인 실패:", error);
-      toast({
-        title: "로그인 실패",
-        description: "이메일 또는 비밀번호를 확인해주세요.",
-        variant: "destructive",
-      });
+      alert(error.response?.data || "로그인에 실패했습니다.");
     } finally {
       setIsLoading(false);
     }
