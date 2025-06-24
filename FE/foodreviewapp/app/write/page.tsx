@@ -70,7 +70,7 @@ export default function WritePage() {
       console.log("💰 총 금액:", result.total);
       console.log("📝 원본 텍스트:", result.text);
       console.log("==================");
-      
+
       // OCR 처리 완료 후 자동으로 다음 단계로 이동
       setTimeout(() => {
         setModalStep(1); // 정보 확인 단계로 이동
@@ -101,7 +101,7 @@ export default function WritePage() {
   const resizeImage = (
     file: File,
     maxWidth: number = 800,
-    quality: number = 0.7
+    quality: number = 0.5
   ): Promise<string> => {
     return new Promise((resolve) => {
       const canvas = document.createElement("canvas");
@@ -109,16 +109,29 @@ export default function WritePage() {
       const img = new window.Image();
 
       img.onload = () => {
-        // 비율 유지하면서 크기 조정
-        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
-        canvas.width = img.width * ratio;
-        canvas.height = img.height * ratio;
+        // 이미지가 너무 큰 경우 더 작게 조정
+        let ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+
+        // 이미지가 maxWidth보다 큰 경우에만 리사이징
+        if (img.width > maxWidth || img.height > maxWidth) {
+          canvas.width = img.width * ratio;
+          canvas.height = img.height * ratio;
+        } else {
+          canvas.width = img.width;
+          canvas.height = img.height;
+        }
 
         // 이미지 그리기
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        // Base64로 변환 (JPEG, 품질 70%)
+        // Base64로 변환 (JPEG, 품질 50%)
         const resizedBase64 = canvas.toDataURL("image/jpeg", quality);
+
+        // Base64 데이터가 5MB를 초과하는 경우 품질을 더 낮춤
+        if (resizedBase64.length > 5 * 1024 * 1024) {
+          return resolve(canvas.toDataURL("image/jpeg", 0.3));
+        }
+
         resolve(resizedBase64);
       };
 
@@ -285,14 +298,12 @@ export default function WritePage() {
       const response = await saveCompleteReview(reviewData);
 
       if (response.success) {
-        alert(
-          "리뷰가 성공적으로 저장되었습니다!"
-        );
+        alert("리뷰가 성공적으로 저장되었습니다!");
 
         console.log("저장된 리뷰 정보:", response);
-        
+
         // 홈 화면으로 이동
-        router.push('/');
+        router.push("/");
       } else {
         alert("리뷰 저장에 실패했습니다: " + response.message);
       }
@@ -319,7 +330,7 @@ export default function WritePage() {
         <Card className="border-2 border-dashed border-gray-300 bg-white">
           <CardContent className="p-8 text-center">
             {uploadedImage ? (
-              <div 
+              <div
                 className="space-y-4 cursor-pointer"
                 onClick={handleUploadClick}
               >
@@ -342,15 +353,21 @@ export default function WritePage() {
                     </div>
                   ) : ocrResult ? (
                     <div className="space-y-1">
-                      <p className="text-sm text-green-600">영수증 분석 완료 ✓</p>
-                      <p className="text-xs text-gray-500">클릭하여 다시 업로드</p>
+                      <p className="text-sm text-green-600">
+                        영수증 분석 완료 ✓
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        클릭하여 다시 업로드
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-1">
                       <p className="text-sm text-gray-600">
                         영수증이 업로드되었습니다
                       </p>
-                      <p className="text-xs text-gray-500">클릭하여 다시 업로드</p>
+                      <p className="text-xs text-gray-500">
+                        클릭하여 다시 업로드
+                      </p>
                     </div>
                   )}
                 </div>

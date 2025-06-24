@@ -45,7 +45,17 @@ public class OcrController {
     @PostMapping("/process")
     public ResponseEntity<?> processReceipt(@RequestParam("image") MultipartFile file) {
         try {
-            log.info("OCR 요청 받음: 파일명={}, 크기={}", file.getOriginalFilename(), file.getSize());
+            log.info("OCR 요청 받음: 파일명={}, 크기={}bytes, 컨텐츠 타입={}",
+                    file.getOriginalFilename(),
+                    file.getSize(),
+                    file.getContentType());
+
+            // 파일 크기 제한 체크 (8MB)
+            if (file.getSize() > 8 * 1024 * 1024) {
+                log.error("파일 크기 초과: {}bytes", file.getSize());
+                return ResponseEntity.badRequest()
+                        .body(createErrorResponse("파일 크기 초과", "8MB 이하의 파일만 업로드 가능합니다."));
+            }
 
             // 1. 디렉토리 생성
             createDirectories();
