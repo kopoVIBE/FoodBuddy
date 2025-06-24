@@ -39,7 +39,7 @@ const reviewTemplates = {
 };
 
 export default function WritePage() {
-  const { t, isDarkMode } = useApp();
+  const { t, isDarkMode, setNavigationDisabled } = useApp();
   const router = useRouter();
   const [selectedTone, setSelectedTone] = useState("");
   const [additionalWords, setAdditionalWords] = useState("");
@@ -60,16 +60,8 @@ export default function WritePage() {
   const processOCR = async (file: File) => {
     setIsProcessingOCR(true);
     try {
-      console.log("OCR 요청 시작:", file.name, file.size);
       const result = await apiProcessOCR(file);
       setOcrResult(result);
-      console.log("=== OCR 처리 완료 ===");
-      console.log("🏪 식당명:", result.restaurantName);
-      console.log("📍 주소:", result.address);
-      console.log("🍽️ 메뉴 항목들:", result.items);
-      console.log("💰 총 금액:", result.total);
-      console.log("📝 원본 텍스트:", result.text);
-      console.log("==================");
       
       // OCR 처리 완료 후 자동으로 다음 단계로 이동
       setTimeout(() => {
@@ -93,6 +85,7 @@ export default function WritePage() {
 
       alert(errorMessage + " 다시 시도해주세요.");
       setShowModal(false); // 오류 발생 시 모달 닫기
+      setNavigationDisabled(false); // 오류 발생 시 네비게이션 활성화
     } finally {
       setIsProcessingOCR(false);
     }
@@ -135,7 +128,8 @@ export default function WritePage() {
       const resizedImage = await resizeImage(file);
       setUploadedImage(resizedImage);
 
-      // OCR 처리 시작 전에 분석 모달 표시
+      // OCR 처리 시작 전에 분석 모달 표시 및 네비게이션 비활성화
+      setNavigationDisabled(true);
       setShowModal(true);
       setModalStep(5); // 영수증 분석 중 모달
       setOcrCompleted(false);
@@ -181,6 +175,7 @@ export default function WritePage() {
       return;
     }
 
+    setNavigationDisabled(true); // 리뷰 생성 중 네비게이션 비활성화
     setShowModal(true);
     setModalStep(4);
 
@@ -193,10 +188,7 @@ export default function WritePage() {
         additionalKeywords: additionalWords.trim() || undefined,
       };
 
-      console.log("리뷰 생성 요청:", reviewRequest);
-
       const response = await generateReview(reviewRequest);
-      console.log("리뷰 생성 완료:", response);
 
       // 리뷰와 카테고리 저장
       setGeneratedReview(response.review);
@@ -205,43 +197,78 @@ export default function WritePage() {
       setTimeout(() => {
         setShowModal(false);
         setShowGeneratedReview(true);
+        setNavigationDisabled(false); // 리뷰 생성 완료 후 네비게이션 활성화
       }, 3000);
     } catch (error: any) {
       console.error("리뷰 생성 중 오류:", error);
 
       // 오류 발생 시 기존 템플릿 사용
-      setTimeout(() => {
-        setShowModal(false);
-        const template =
-          reviewTemplates[selectedTone as keyof typeof reviewTemplates];
-        let finalReview = template;
+              setTimeout(() => {
+          setShowModal(false);
+          const template =
+            reviewTemplates[selectedTone as keyof typeof reviewTemplates];
+          let finalReview = template;
 
-        // 추가 단어가 있으면 리뷰에 포함
-        if (additionalWords.trim()) {
-          finalReview += ` ${additionalWords.trim()}`;
-        }
+          // 추가 단어가 있으면 리뷰에 포함
+          if (additionalWords.trim()) {
+            finalReview += ` ${additionalWords.trim()}`;
+          }
 
-        setGeneratedReview(finalReview);
-        setShowGeneratedReview(true);
+          setGeneratedReview(finalReview);
+          setShowGeneratedReview(true);
+          setNavigationDisabled(false); // 오류 처리 후에도 네비게이션 활성화
 
-        // 사용자에게 알림
-        alert("AI 리뷰 생성에 실패하여 기본 템플릿을 사용합니다.");
-      }, 3000);
+          // 사용자에게 알림
+          alert("AI 리뷰 생성에 실패하여 기본 템플릿을 사용합니다.");
+        }, 3000);
     }
   };
 
   const handleModalComplete = () => {
     setOcrCompleted(true);
     setShowModal(false);
+    setNavigationDisabled(false); // OCR 완료 후 네비게이션 활성화
   };
 
   const handleRatingFromModal = (modalRating: number) => {
     setRating(modalRating);
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(generatedReview);
-    alert("리뷰가 클립보드에 복사되었습니다!");
+  const copyToClipboard = async () => {
+    try {
+      // 최신 Clipboard API 사용 (HTTPS 환경에서만 작동)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(generatedReview);
+        alert("리뷰가 클립보드에 복사되었습니다!");
+      } else {
+        // Fallback 방법: 임시 텍스트 영역 생성 후 복사
+        const textArea = document.createElement('textarea');
+        textArea.value = generatedReview;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          document.execCommand('copy');
+          alert("리뷰가 클립보드에 복사되었습니다!");
+        } catch (err) {
+          console.error('Fallback 복사 실패:', err);
+          // 최후의 수단: 텍스트 선택 상태로 두기
+          textArea.style.position = 'static';
+          textArea.style.left = '0';
+          textArea.style.top = '0';
+          alert("복사 기능을 사용할 수 없습니다. 텍스트를 직접 선택해서 복사해주세요.");
+        } finally {
+          document.body.removeChild(textArea);
+        }
+      }
+    } catch (error) {
+      console.error('클립보드 복사 오류:', error);
+      alert("복사 중 오류가 발생했습니다. 텍스트를 직접 선택해서 복사해주세요.");
+    }
   };
 
   const saveReview = async () => {
@@ -279,8 +306,6 @@ export default function WritePage() {
         rating: rating,
       };
 
-      console.log("리뷰 저장 요청:", reviewData);
-
       // API 호출
       const response = await saveCompleteReview(reviewData);
 
@@ -288,8 +313,6 @@ export default function WritePage() {
         alert(
           "리뷰가 성공적으로 저장되었습니다!"
         );
-
-        console.log("저장된 리뷰 정보:", response);
         
         // 홈 화면으로 이동
         router.push('/');

@@ -465,9 +465,17 @@ export default function ReviewModal({
     }
   };
 
+  const handleBackdropClick = () => {
+    // step 4, 5 (영수증 분석 중, 리뷰 생성 중)일 때는 모달 닫기 방지
+    if (step === 4 || step === 5) {
+      return;
+    }
+    onClose();
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50" onClick={handleBackdropClick} />
       <div className="relative bg-white rounded-[10px] overflow-hidden">
         {renderStep()}
       </div>

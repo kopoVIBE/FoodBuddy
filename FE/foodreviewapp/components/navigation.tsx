@@ -7,7 +7,7 @@ import { useApp } from "@/contexts/app-context";
 
 export default function Navigation() {
   const pathname = usePathname();
-  const { t, isDarkMode } = useApp();
+  const { t, isDarkMode, isNavigationDisabled } = useApp();
 
   const navItems = [
     { href: "/", icon: "/icons/home.svg", labelKey: "home" },
@@ -26,7 +26,7 @@ export default function Navigation() {
     <nav
       className={`fixed bottom-0 left-0 right-0 border-t z-50 ${
         isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-      }`}
+      } ${isNavigationDisabled ? "pointer-events-none opacity-50" : ""}`}
     >
       <div className="max-w-md mx-auto px-4">
         <div className="flex justify-around py-2">

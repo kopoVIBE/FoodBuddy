@@ -40,6 +40,10 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=try1234
       - JWT_SECRET=your_production_jwt_secret_key_key_key_key
+      # OCR 관련 환경변수
+      - CLOVA_OCR_SECRET_KEY=${CLOVA_OCR_SECRET_KEY}
+      - CLOVA_OCR_APIGW_INVOKE_URL=${CLOVA_OCR_APIGW_INVOKE_URL}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     depends_on:
       mysql:
         condition: service_healthy

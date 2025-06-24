@@ -22,11 +22,11 @@ public class OcrController {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // OCR 입력/출력 디렉토리 경로
-    private final String OCR_BASE_PATH = System.getProperty("user.dir");
-    private final String PYTHON_SCRIPT_PATH = OCR_BASE_PATH + "/BE/yoriview/ocr/ocr-parser.py";
-    private final String INPUT_DIR = OCR_BASE_PATH + "/ocr/input";
-    private final String OUTPUT_DIR = OCR_BASE_PATH + "/ocr/output";
+    // Docker 환경에서 고정 경로 사용
+    private final String OCR_BASE_PATH = "/app/ocr";
+    private final String INPUT_DIR = OCR_BASE_PATH + "/input";
+    private final String OUTPUT_DIR = OCR_BASE_PATH + "/output";
+    private final String PYTHON_SCRIPT_PATH = OCR_BASE_PATH + "/ocr-parser.py";
 
     @RequestMapping(value = "/process", method = RequestMethod.OPTIONS)
     public ResponseEntity<?> handleOptions() {
@@ -45,7 +45,17 @@ public class OcrController {
     @PostMapping("/process")
     public ResponseEntity<?> processReceipt(@RequestParam("image") MultipartFile file) {
         try {
-            log.info("OCR 요청 받음: 파일명={}, 크기={}", file.getOriginalFilename(), file.getSize());
+            log.info("OCR 요청 받음: 파일명={}, 크기={}bytes, 컨텐츠 타입={}",
+                    file.getOriginalFilename(),
+                    file.getSize(),
+                    file.getContentType());
+
+            // 파일 크기 제한 체크 (8MB)
+            if (file.getSize() > 8 * 1024 * 1024) {
+                log.error("파일 크기 초과: {}bytes", file.getSize());
+                return ResponseEntity.badRequest()
+                        .body(createErrorResponse("파일 크기 초과", "8MB 이하의 파일만 업로드 가능합니다."));
+            }
 
             // 1. 디렉토리 생성
             createDirectories();
@@ -185,7 +195,8 @@ public class OcrController {
             if (exitCode == 0) {
                 return new ProcessResult(true, "", outputStr);
             } else {
-                return new ProcessResult(false, "Python 스크립트 실행 오류 (exit code: " + exitCode + "): " + outputStr, outputStr);
+                return new ProcessResult(false, "Python 스크립트 실행 오류 (exit code: " + exitCode + "): " + outputStr,
+                        outputStr);
             }
 
         } catch (Exception e) {
@@ -233,10 +244,6 @@ public class OcrController {
         return errorResponse;
     }
 
-
-
-
-
     // 내부 클래스: 프로세스 실행 결과
     private static class ProcessResult {
         private final boolean success;
@@ -249,8 +256,16 @@ public class OcrController {
             this.output = output;
         }
 
-        public boolean isSuccess() { return success; }
-        public String getErrorMessage() { return errorMessage; }
-        public String getOutput() { return output; }
+        public boolean isSuccess() {
+            return success;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
+        }
+
+        public String getOutput() {
+            return output;
+        }
     }
-} 
+}
