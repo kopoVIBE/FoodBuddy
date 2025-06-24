@@ -5,11 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  ArrowLeft,
+  CheckCircle2,
+} from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useApp } from "@/contexts/app-context";
 import { signup, login, SignupData, LoginData } from "@/lib/api";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "@/components/ui/use-toast";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -17,6 +33,7 @@ export default function AuthPage() {
   const [currentView, setCurrentView] = useState<"login" | "signup">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showSignupSuccessModal, setShowSignupSuccessModal] = useState(false);
 
   // 로그인 상태
   const [loginData, setLoginData] = useState({
@@ -98,26 +115,20 @@ export default function AuthPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
     try {
-      const loginPayload: LoginData = {
-        email: loginData.email,
-        password: loginData.password,
-      };
-
-      console.log("로그인 시도:", loginPayload);
-      const response = await login(loginPayload);
-      console.log("로그인 성공:", response);
-
-      // 중앙 저장소에 사용자 정보 저장
+      setIsLoading(true);
+      const response = await login(loginData);
+      localStorage.setItem("accessToken", response.token);
+      localStorage.setItem("nickname", response.nickname);
       setUserInfo(response.nickname, response.token);
-
-      // 성공 시 홈으로 이동
-      router.push("/");
-    } catch (error: any) {
+      router.push("/loading");
+    } catch (error) {
       console.error("로그인 실패:", error);
-      alert(error.response?.data || "로그인에 실패했습니다.");
+      toast({
+        title: "로그인 실패",
+        description: "이메일 또는 비밀번호를 확인해주세요.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -161,19 +172,23 @@ export default function AuthPage() {
       const response = await signup(signupPayload);
       console.log("회원가입 성공:", response);
 
-      // 회원가입 성공 후 자동 로그인
-      const loginPayload: LoginData = {
+      // 회원가입 성공 모달 표시
+      setShowSignupSuccessModal(true);
+
+      // 로그인 폼에 이메일 자동 입력
+      setLoginData({
+        ...loginData,
         email: signupData.email,
-        password: signupData.password,
-      };
+      });
 
-      const loginResponse = await login(loginPayload);
-
-      // 중앙 저장소에 사용자 정보 저장
-      setUserInfo(loginResponse.nickname, loginResponse.token);
-
-      // 성공 시 홈으로 이동
-      router.push("/");
+      // 회원가입 폼 초기화
+      setSignupData({
+        nickname: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        defaultStyleId: "FRIENDLY",
+      });
     } catch (error: any) {
       console.error("회원가입 실패:", error);
       alert(error.response?.data || "회원가입에 실패했습니다.");
@@ -616,6 +631,51 @@ export default function AuthPage() {
             </p>
           </div>
         )}
+
+        {/* 회원가입 성공 모달 */}
+        <Dialog
+          open={showSignupSuccessModal}
+          onOpenChange={setShowSignupSuccessModal}
+        >
+          <DialogContent
+            className={`sm:max-w-[425px] ${
+              isDarkMode ? "bg-gray-800 text-white" : "bg-white"
+            }`}
+          >
+            <DialogHeader>
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                  <CheckCircle2 className="w-6 h-6 text-green-600" />
+                </div>
+                <DialogTitle className="text-xl font-semibold text-center">
+                  회원가입 완료!
+                </DialogTitle>
+                <DialogDescription className="text-center">
+                  <p
+                    className={`${
+                      isDarkMode ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    회원가입이 완료되었습니다.
+                    <br />
+                    로그인하여 서비스를 이용해주세요.
+                  </p>
+                </DialogDescription>
+              </div>
+            </DialogHeader>
+            <div className="flex justify-center mt-6">
+              <Button
+                onClick={() => {
+                  setShowSignupSuccessModal(false);
+                  setCurrentView("login");
+                }}
+                className="bg-[#EB4C34] hover:bg-[#EB4C34CC] text-white px-8"
+              >
+                로그인하기
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

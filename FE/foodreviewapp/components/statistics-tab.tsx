@@ -192,6 +192,176 @@ export default function StatisticsTab() {
     );
   };
 
+  // ... existing code ...
+
+  // 파이 차트 렌더링 함수
+  const renderPieChart = () => {
+    return (
+      <div className="h-32 mb-3 relative">
+        <ResponsiveContainer width="100%" height="100%">
+          {totalCount === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <p
+                className={`text-sm ${
+                  isDarkMode ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                아직 리뷰를 작성하지 않았어요!
+              </p>
+            </div>
+          ) : (
+            <PieChart>
+              <Pie
+                data={categoryData}
+                cx="50%"
+                cy="50%"
+                innerRadius={25}
+                outerRadius={50}
+                paddingAngle={2}
+                dataKey="count"
+                animationBegin={0}
+                animationDuration={800}
+                onClick={onPieClick}
+                style={{ cursor: "pointer" }}
+              >
+                {categoryData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.color}
+                    style={{ outline: "none" }}
+                  />
+                ))}
+              </Pie>
+            </PieChart>
+          )}
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  // 라인 차트 렌더링 함수
+  const renderLineChart = () => {
+    return (
+      <div className="h-32">
+        <ResponsiveContainer width="100%" height="100%">
+          {monthlyData.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <p
+                className={`text-sm ${
+                  isDarkMode ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                아직 리뷰를 작성하지 않았어요!
+              </p>
+            </div>
+          ) : (
+            <LineChart
+              data={monthlyData}
+              onClick={onMonthlyClick}
+              margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+            >
+              <XAxis
+                dataKey="month"
+                tick={{
+                  fontSize: 10,
+                  fill: isDarkMode ? "#d1d5db" : "#6b7280",
+                }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{
+                  fontSize: 10,
+                  fill: isDarkMode ? "#d1d5db" : "#6b7280",
+                }}
+                axisLine={false}
+                tickLine={false}
+                width={20}
+              />
+              <Line
+                type="monotone"
+                dataKey="reviews"
+                stroke="#EB4C34"
+                strokeWidth={2}
+                dot={{
+                  fill: "#EB4C34",
+                  strokeWidth: 2,
+                  r: 3,
+                  cursor: "pointer",
+                }}
+                activeDot={{
+                  fill: "#EB4C34",
+                  strokeWidth: 2,
+                  r: 4,
+                }}
+                animationDuration={1000}
+              />
+            </LineChart>
+          )}
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  // 바 차트 렌더링 함수
+  const renderBarChart = () => {
+    return (
+      <div className="h-32">
+        <ResponsiveContainer width="100%" height="100%">
+          {ratingData.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <p
+                className={`text-sm ${
+                  isDarkMode ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                아직 리뷰를 작성하지 않았어요!
+              </p>
+            </div>
+          ) : (
+            <BarChart
+              data={ratingData}
+              onClick={onRatingClick}
+              margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke={isDarkMode ? "#374151" : "#f3f4f6"}
+              />
+              <XAxis
+                dataKey="rating"
+                tick={{
+                  fontSize: 10,
+                  fill: isDarkMode ? "#d1d5db" : "#6b7280",
+                }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{
+                  fontSize: 10,
+                  fill: isDarkMode ? "#d1d5db" : "#6b7280",
+                }}
+                axisLine={false}
+                tickLine={false}
+                width={20}
+              />
+              <Bar
+                dataKey="count"
+                fill="#EB4C34"
+                radius={[2, 2, 0, 0]}
+                animationDuration={800}
+                style={{ cursor: "pointer", outline: "none" }}
+              />
+            </BarChart>
+          )}
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  // ... rest of the existing code ...
+  // ... existing code ...
   return (
     <div className="space-y-4" style={{ outline: "none" }}>
       <style jsx>{`
@@ -249,7 +419,7 @@ export default function StatisticsTab() {
               {statistics.avgRating.toFixed(1)}
             </div>
           </div>
-          <div className="absolute w-[46px] h-[15px] left-1/2 top-[43px] transform -translate-x-1/2">
+          <div className="absolute w-[80px] h-[15px] left-1/2 top-[43px] transform -translate-x-1/2">
             <div className="font-normal text-[11px] leading-[13px] text-center text-white">
               평균 평점
             </div>
@@ -263,7 +433,7 @@ export default function StatisticsTab() {
               {statistics.totalReviewCount}
             </div>
           </div>
-          <div className="absolute w-[46px] h-[15px] left-1/2 top-[43px] transform -translate-x-1/2">
+          <div className="absolute w-[80px] h-[15px] left-1/2 top-[43px] transform -translate-x-1/2">
             <div className="font-normal text-[11px] leading-[13px] text-center text-white">
               총 리뷰 수
             </div>
@@ -312,66 +482,38 @@ export default function StatisticsTab() {
               선호하는 음식
             </h3>
           </div>
-
-          {/* 파이 차트 */}
-          <div className="h-32 mb-3 relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={25}
-                  outerRadius={50}
-                  paddingAngle={2}
-                  dataKey="count"
-                  animationBegin={0}
-                  animationDuration={800}
-                  onClick={onPieClick}
-                  style={{ cursor: "pointer" }}
+          {renderPieChart()}
+          {totalCount > 0 && (
+            <div className="space-y-2">
+              {categoryData.map((category, index) => (
+                <div
+                  key={category.name}
+                  className="flex items-center justify-between"
                 >
-                  {categoryData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.color}
-                      style={{ outline: "none" }}
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: category.color }}
                     />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* 범례 */}
-          <div className="space-y-2">
-            {categoryData.map((category, index) => (
-              <div
-                key={category.name}
-                className="flex items-center justify-between"
-              >
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: category.color }}
-                  />
+                    <span
+                      className={`text-sm ${
+                        isDarkMode ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      {category.name}
+                    </span>
+                  </div>
                   <span
-                    className={`text-sm ${
-                      isDarkMode ? "text-white" : "text-gray-900"
+                    className={`text-sm font-medium ${
+                      isDarkMode ? "text-gray-300" : "text-gray-700"
                     }`}
                   >
-                    {category.name}
+                    {category.count}회 ({getPercentage(category.count)}%)
                   </span>
                 </div>
-                <span
-                  className={`text-sm font-medium ${
-                    isDarkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  {category.count}회 ({getPercentage(category.count)}%)
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -388,53 +530,7 @@ export default function StatisticsTab() {
               월별 리뷰 트렌드
             </h3>
           </div>
-
-          <div className="h-32">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={monthlyData}
-                onClick={onMonthlyClick}
-                margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
-              >
-                <XAxis
-                  dataKey="month"
-                  tick={{
-                    fontSize: 10,
-                    fill: isDarkMode ? "#d1d5db" : "#6b7280",
-                  }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{
-                    fontSize: 10,
-                    fill: isDarkMode ? "#d1d5db" : "#6b7280",
-                  }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={20}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="reviews"
-                  stroke="#EB4C34"
-                  strokeWidth={2}
-                  dot={{
-                    fill: "#EB4C34",
-                    strokeWidth: 2,
-                    r: 3,
-                    cursor: "pointer",
-                  }}
-                  activeDot={{
-                    fill: "#EB4C34",
-                    strokeWidth: 2,
-                    r: 4,
-                  }}
-                  animationDuration={1000}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          {renderLineChart()}
         </CardContent>
       </Card>
 
@@ -451,46 +547,7 @@ export default function StatisticsTab() {
               평점 분포
             </h3>
           </div>
-
-          <div className="h-32">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={ratingData}
-                onClick={onRatingClick}
-                margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke={isDarkMode ? "#374151" : "#f3f4f6"}
-                />
-                <XAxis
-                  dataKey="rating"
-                  tick={{
-                    fontSize: 10,
-                    fill: isDarkMode ? "#d1d5db" : "#6b7280",
-                  }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{
-                    fontSize: 10,
-                    fill: isDarkMode ? "#d1d5db" : "#6b7280",
-                  }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={20}
-                />
-                <Bar
-                  dataKey="count"
-                  fill="#EB4C34"
-                  radius={[2, 2, 0, 0]}
-                  animationDuration={800}
-                  style={{ cursor: "pointer", outline: "none" }}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {renderBarChart()}
         </CardContent>
       </Card>
 
