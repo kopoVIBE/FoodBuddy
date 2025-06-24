@@ -139,7 +139,7 @@ jobs:
 
             cd ~/foodbuddy
 
-            # 환경변수 설정 (ECR_REGISTRY가 이제 제대로 설정됨)
+            # 환경변수 설정
             echo "ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}" > .env
             echo "ECR_REPOSITORY_FRONTEND=${{ env.ECR_REPOSITORY_FRONTEND }}" >> .env
             echo "ECR_REPOSITORY_BACKEND=${{ env.ECR_REPOSITORY_BACKEND }}" >> .env
@@ -157,3 +157,26 @@ jobs:
             docker ps
 
             echo "✅ 배포 완료: $(date)"
+
+      - name: 📄 docker-compose.yml 복사
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ env.EC2_HOST }}
+          username: ${{ env.EC2_USERNAME }}
+          key: ${{ env.EC2_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "~/foodbuddy"
+          overwrite: true
+
+      - name: 🔄 컨테이너 재시작
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.EC2_HOST }}
+          username: ${{ env.EC2_USERNAME }}
+          key: ${{ env.EC2_SSH_KEY }}
+          script: |
+            cd ~/foodbuddy
+            docker-compose pull
+            docker-compose down || true
+            docker-compose up -d
+            docker ps
