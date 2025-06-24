@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star, TrendingUp, Calendar, Clock } from "lucide-react";
 import { useApp } from "@/contexts/app-context";
+import { Separator } from "@/components/ui/separator";
 import {
   BarChart,
   Bar,
@@ -189,7 +190,7 @@ export default function StatisticsTab() {
         }
       `}</style>
       {/* 헤더 섹션 */}
-      <div className="relative w-full h-[72px] mb-6">
+      <div className="relative w-full h-[72px] mb-3">
         {/* 로고 */}
         <div className="absolute left-[13px] top-[14px] w-[44px] h-[44px]">
           <Image
@@ -215,6 +216,7 @@ export default function StatisticsTab() {
           </p>
         </div>
       </div>
+      <Separator className={isDarkMode ? "bg-gray-700" : ""} />
 
       {/* 요약 통계 카드들 */}
       <div className="flex justify-center items-center gap-3">
