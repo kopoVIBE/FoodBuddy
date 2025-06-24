@@ -28,15 +28,6 @@ jobs:
     name: 🎨 프론트엔드 빌드
     runs-on: ubuntu-latest
     steps:
-      - name: 🧹 디스크 공간 확보
-        run: |
-          echo "📊 프론트엔드 작업 시작: $(date)"
-          echo "🔍 현재 브랜치: ${{ github.ref }}"
-          df -h
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY"
-          docker system prune -af
-          df -h
-
       - name: 📥 소스코드 체크아웃
         uses: actions/checkout@v3
 
@@ -72,15 +63,6 @@ jobs:
     name: 🔧 백엔드 빌드
     runs-on: ubuntu-latest
     steps:
-      - name: 🧹 디스크 공간 확보
-        run: |
-          echo "📊 백엔드 작업 시작: $(date)"
-          echo "🔍 현재 브랜치: ${{ github.ref }}"
-          df -h
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY"
-          docker system prune -af
-          df -h
-
       - name: 📥 소스코드 체크아웃
         uses: actions/checkout@v3
 
