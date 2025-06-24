@@ -11,6 +11,7 @@ import { Download, Star } from "lucide-react";
 import Image from "next/image";
 import ReviewModal from "@/components/review-modal";
 import { useApp } from "@/contexts/app-context";
+import { useRouter } from "next/navigation";
 import {
   processOCR as apiProcessOCR,
   OCRResult,
@@ -39,6 +40,7 @@ const reviewTemplates = {
 
 export default function WritePage() {
   const { t, isDarkMode } = useApp();
+  const router = useRouter();
   const [selectedTone, setSelectedTone] = useState("");
   const [additionalWords, setAdditionalWords] = useState("");
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -287,18 +289,10 @@ export default function WritePage() {
           `리뷰가 성공적으로 저장되었습니다!\n리뷰 ID: ${response.reviewId}`
         );
 
-        // 저장 성공 후 초기화
-        setShowGeneratedReview(false);
-        setGeneratedReview("");
-        setUploadedImage(null);
-        setOcrResult(null);
-        setSelectedTone("");
-        setOcrCompleted(false);
-        setAdditionalWords("");
-        setRating(0);
-        setRestaurantCategory("");
-
         console.log("저장된 리뷰 정보:", response);
+        
+        // 홈 화면으로 이동
+        router.push('/');
       } else {
         alert("리뷰 저장에 실패했습니다: " + response.message);
       }
