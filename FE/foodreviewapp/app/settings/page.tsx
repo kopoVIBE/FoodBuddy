@@ -59,7 +59,7 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-[#EB4C3420] rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-[#FFF6EA] rounded-full flex items-center justify-center">
                 <Image
                   src="/logo.svg"
                   alt="프로필"

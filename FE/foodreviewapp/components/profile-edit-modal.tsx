@@ -1,13 +1,11 @@
 "use client";
 
-import type React from "react";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X } from "lucide-react";
 import Image from "next/image";
+import { X } from "lucide-react";
 import { useApp } from "@/contexts/app-context";
 
 interface ProfileEditModalProps {
@@ -22,13 +20,18 @@ export default function ProfileEditModal({
   const { isDarkMode } = useApp();
   const [profileData, setProfileData] = useState({
     name: "푸드러버",
-    email: "foodlover@example.com",
+    password: "",
+    confirmPassword: "",
   });
 
   if (!isOpen) return null;
 
   const handleSave = () => {
-    // 프로필 저장 로직
+    if (profileData.password !== profileData.confirmPassword) {
+      alert("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
     alert("프로필이 저장되었습니다!");
     onClose();
   };
@@ -37,53 +40,26 @@ export default function ProfileEditModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
-      <div
-        className={`relative w-full max-w-md rounded-2xl overflow-hidden ${
-          isDarkMode ? "bg-gray-800" : "bg-white"
-        }`}
-      >
-        {/* 헤더 */}
-        <div
-          className={`flex items-center justify-between p-4 border-b ${
-            isDarkMode ? "border-gray-700" : "border-gray-200"
-          }`}
-        >
-          <h3
-            className={`text-lg font-semibold ${
-              isDarkMode ? "text-white" : "text-gray-900"
-            }`}
-          >
-            프로필 편집
-          </h3>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5" />
-          </Button>
+      <div className="relative w-full max-w-[400px] max-h-[80vh] bg-white rounded-[10px] flex flex-col overflow-hidden">
+        {/* X 닫기 버튼만 남김 */}
+        <div className="flex justify-end px-3 py-2">
+          <button onClick={onClose}>
+            <X className="w-4 h-4 text-[#333]" />
+          </button>
         </div>
 
-        {/* 컨텐츠 */}
-        <div className="p-6 space-y-6">
+        {/* 콘텐츠 */}
+        <div className="px-4 py-4 space-y-4 overflow-y-auto flex-1">
           {/* 프로필 이미지 */}
-          <div className="text-center">
-            <div className="relative inline-block">
-              <div
-                className={`w-24 h-24 rounded-full flex items-center justify-center overflow-hidden ${
-                  isDarkMode ? "bg-gray-700" : "bg-[#EB4C3420]"
-                }`}
-              >
-                <Image
-                  src="/logo.svg"
-                  alt="프로필"
-                  width={48}
-                  height={48}
-                  className="w-12 h-12"
-                />
-              </div>
+          <div className="flex justify-center">
+            <div className="w-[100px] h-[100px] bg-[#FFF6EA] rounded-full flex items-center justify-center">
+              <Image src="/logo.svg" alt="프로필" width={52} height={52} />
             </div>
           </div>
 
           {/* 사용자 이름 */}
-          <div className="space-y-2">
-            <Label className={isDarkMode ? "text-white" : "text-gray-900"}>
+          <div className="space-y-1">
+            <Label className="text-[16px] font-semibold text-[#333]">
               사용자 이름
             </Label>
             <Input
@@ -91,56 +67,61 @@ export default function ProfileEditModal({
               onChange={(e) =>
                 setProfileData({ ...profileData, name: e.target.value })
               }
-              placeholder="사용자 이름을 입력하세요"
-              className={
-                isDarkMode ? "bg-gray-700 border-gray-600 text-white" : ""
-              }
+              className="w-full h-[48px] rounded-[8px] border border-[#BCBCBC] text-[14px] px-3"
+              placeholder="이름을 입력하세요"
             />
           </div>
 
-          {/* 이메일 */}
-          <div className="space-y-2">
-            <Label className={isDarkMode ? "text-white" : "text-gray-900"}>
-              이메일
+          {/* 비밀번호 */}
+          <div className="space-y-1">
+            <Label className="text-[16px] font-semibold text-[#333]">
+              비밀번호
             </Label>
             <Input
-              type="email"
-              value={profileData.email}
+              type="password"
+              value={profileData.password}
               onChange={(e) =>
-                setProfileData({ ...profileData, email: e.target.value })
+                setProfileData({ ...profileData, password: e.target.value })
               }
-              placeholder="이메일을 입력하세요"
-              className={
-                isDarkMode ? "bg-gray-700 border-gray-600 text-white" : ""
+              className="w-full h-[48px] rounded-[8px] border border-[#BCBCBC] text-[14px] px-3"
+              placeholder="비밀번호를 입력하세요"
+            />
+          </div>
+
+          {/* 비밀번호 재확인 */}
+          <div className="space-y-1">
+            <Label className="text-[16px] font-semibold text-[#333]">
+              비밀번호 재확인
+            </Label>
+            <Input
+              type="password"
+              value={profileData.confirmPassword}
+              onChange={(e) =>
+                setProfileData({
+                  ...profileData,
+                  confirmPassword: e.target.value,
+                })
               }
+              className="w-full h-[48px] rounded-[8px] border border-[#BCBCBC] text-[14px] px-3"
+              placeholder="비밀번호를 다시 입력하세요"
             />
           </div>
         </div>
 
-        {/* 하단 버튼 */}
-        <div
-          className={`p-4 border-t flex gap-2 ${
-            isDarkMode
-              ? "border-gray-700 bg-gray-750"
-              : "border-gray-200 bg-gray-50"
-          }`}
-        >
+        {/* 버튼 */}
+        <div className="flex justify-between px-4 py-3 border-t border-gray-200">
           <Button
-            variant="outline"
-            className={`flex-1 ${
-              isDarkMode
-                ? "border-gray-600 text-gray-300 hover:bg-gray-700"
-                : ""
-            }`}
-            onClick={onClose}
-          >
-            취소
-          </Button>
-          <Button
-            className="flex-1 bg-[#EB4C34] hover:bg-[#EB4C34CC] text-white"
+            className="w-[160px] h-[48px] text-[16px] font-bold bg-[#EB4C34] text-white rounded-[8px] hover:bg-[#EB4C34CC]"
             onClick={handleSave}
           >
             저장
+          </Button>
+          <Button
+            variant="outline"
+            className="w-[160px] h-[48px] text-[16px] font-bold border-[#EB4C34] text-[#EB4C34] rounded-[8px]"
+            onClick={onClose}
+          >
+            취소
           </Button>
         </div>
       </div>
