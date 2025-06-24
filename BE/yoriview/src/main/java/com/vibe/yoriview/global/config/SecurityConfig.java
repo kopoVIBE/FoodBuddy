@@ -35,8 +35,16 @@ public class SecurityConfig {
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/api/users/register", "/api/users/login", "/api/review-styles",
-                                "/api/restaurants", "/api/receipts", "/api/ocr/**")
+                        .requestMatchers(
+                                "/",
+                                "/api/users/register",
+                                "/api/users/login",
+                                "/api/review-styles",
+                                "/api/restaurants",
+                                "/api/receipts",
+                                "/api/ocr/**",
+                                "/api/ocr/process",
+                                "/api/reviews/complete")
                         .permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
@@ -48,7 +56,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of(
+        configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",
                 "http://54.180.109.147:3000",
                 "http://54.180.109.147:8080"));
