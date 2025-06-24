@@ -8,10 +8,12 @@ interface AppContextType {
   language: string;
   nickname: string | null;
   isAuthenticated: boolean;
+  isNavigationDisabled: boolean;
   toggleDarkMode: () => void;
   setLanguage: (lang: string) => void;
   setUserInfo: (nickname: string, token: string) => void;
   logout: () => void;
+  setNavigationDisabled: (disabled: boolean) => void;
   t: (key: string) => string;
 }
 
@@ -77,6 +79,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState("ko");
   const [nickname, setNickname] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isNavigationDisabled, setIsNavigationDisabled] = useState(false);
 
   useEffect(() => {
     // 클라이언트 사이드에서만 실행
@@ -141,6 +144,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const setNavigationDisabled = (disabled: boolean) => {
+    setIsNavigationDisabled(disabled);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -148,10 +155,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         language,
         nickname,
         isAuthenticated,
+        isNavigationDisabled,
         toggleDarkMode,
         setLanguage,
         setUserInfo,
         logout,
+        setNavigationDisabled,
         t,
       }}
     >
