@@ -12,14 +12,14 @@ import RestaurantDetailModal from "@/components/restaurant-detail-modal";
 import RestaurantReviewsModal from "@/components/restaurant-reviews-modal";
 import { useApp } from "@/contexts/app-context";
 import { useRouter } from "next/navigation";
-import { 
-  getMyDetailedReviews, 
-  MyReviewResponse, 
+import {
+  getMyDetailedReviews,
+  MyReviewResponse,
   getMyFavoriteRestaurants,
   FavoriteRestaurantInfo,
   addFavorite,
   removeFavorite,
-  deleteReview
+  deleteReview,
 } from "@/lib/api";
 
 // 임시 데이터
@@ -132,7 +132,9 @@ export default function HomePage() {
   const router = useRouter();
   const [showSplash, setShowSplash] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"written" | "favorites">("written");
+  const [activeTab, setActiveTab] = useState<"written" | "favorites">(
+    "written"
+  );
   const [sortOrder, setSortOrder] = useState("latest");
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [shareModal, setShareModal] = useState({
@@ -163,10 +165,14 @@ export default function HomePage() {
   });
 
   // 즐겨찾기 데이터 상태
-  const [favoriteRestaurants, setFavoriteRestaurants] = useState<FavoriteRestaurantInfo[]>([]);
+  const [favoriteRestaurants, setFavoriteRestaurants] = useState<
+    FavoriteRestaurantInfo[]
+  >([]);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
 
-  const [favoriteStates, setFavoriteStates] = useState<{ [key: string]: boolean }>({});
+  const [favoriteStates, setFavoriteStates] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   // 즐겨찾기 데이터 불러오기
   const fetchFavoriteRestaurants = async () => {
@@ -175,18 +181,22 @@ export default function HomePage() {
       console.log("즐겨찾기 데이터 요청 시작");
       const favorites = await getMyFavoriteRestaurants();
       console.log("받은 즐겨찾기 데이터:", favorites);
-      
+
       // API 응답이 배열인지 확인
       if (Array.isArray(favorites)) {
         setFavoriteRestaurants(favorites);
-        
+
         // 초기 즐겨찾기 상태 설정
         const initialStates = Object.fromEntries(
           favorites.map((fav) => [fav.restaurantId, true])
         );
         setFavoriteStates(initialStates);
       } else {
-        console.error("즐겨찾기 데이터가 배열이 아닙니다:", typeof favorites, favorites);
+        console.error(
+          "즐겨찾기 데이터가 배열이 아닙니다:",
+          typeof favorites,
+          favorites
+        );
         setFavoriteRestaurants([]);
         setFavoriteStates({});
       }
@@ -202,7 +212,7 @@ export default function HomePage() {
   const toggleFavorite = async (restaurantId: string) => {
     try {
       const isCurrentlyFavorited = favoriteStates[restaurantId];
-      
+
       if (isCurrentlyFavorited) {
         await removeFavorite(restaurantId);
         setFavoriteStates((prev) => ({
@@ -210,7 +220,9 @@ export default function HomePage() {
           [restaurantId]: false,
         }));
         // 즐겨찾기 목록에서 제거
-        setFavoriteRestaurants((prev) => prev.filter(fav => fav.restaurantId !== restaurantId));
+        setFavoriteRestaurants((prev) =>
+          prev.filter((fav) => fav.restaurantId !== restaurantId)
+        );
       } else {
         await addFavorite(restaurantId);
         setFavoriteStates((prev) => ({
@@ -247,12 +259,12 @@ export default function HomePage() {
   // 리뷰 데이터를 UI에서 사용할 형태로 변환
   const formattedReviews = useMemo(() => {
     console.log("formattedReviews 계산 중:", myReviews);
-    const formatted = myReviews.map(review => {
+    const formatted = myReviews.map((review) => {
       // Base64 이미지 처리
       let imageUrl = "/placeholder.svg?height=200&width=300";
       if (review.originalImg) {
         // 이미 data URL 형식인지 확인
-        if (review.originalImg.startsWith('data:image/')) {
+        if (review.originalImg.startsWith("data:image/")) {
           imageUrl = review.originalImg;
         } else {
           // Base64 데이터만 있는 경우 prefix 추가
@@ -264,11 +276,11 @@ export default function HomePage() {
       const isFavorited = favoriteStates[review.restaurantId] || false;
 
       return {
-        id: parseInt(review.reviewId.replace(/-/g, '').substring(0, 8), 16),
+        id: parseInt(review.reviewId.replace(/-/g, "").substring(0, 8), 16),
         restaurantName: review.restaurantName || "알 수 없는 식당",
         location: review.restaurantAddress || "주소 없음",
         rating: Number(review.rating),
-        date: new Date(review.createdAt).toISOString().split('T')[0],
+        date: new Date(review.createdAt).toISOString().split("T")[0],
         content: review.content,
         image: imageUrl,
         tags: [review.restaurantCategory || "기타"],
@@ -288,9 +300,12 @@ export default function HomePage() {
       if (typeof window === "undefined") return;
 
       const authToken = localStorage.getItem("accessToken");
-      const hasShownSplash = localStorage.getItem("hasShownSplash");
+      const hasShownSplash = sessionStorage.getItem("hasShownSplash");
 
-      console.log("인증 상태 확인:", { authToken: !!authToken, hasShownSplash });
+      console.log("인증 상태 확인:", {
+        authToken: !!authToken,
+        hasShownSplash,
+      });
 
       if (!authToken) {
         setIsLoading(false);
@@ -303,7 +318,7 @@ export default function HomePage() {
         setTimeout(() => {
           setShowSplash(false);
           setIsLoading(false);
-          localStorage.setItem("hasShownSplash", "true");
+          sessionStorage.setItem("hasShownSplash", "true");
           fetchMyReviews();
           fetchFavoriteRestaurants();
         }, 3000);
@@ -409,11 +424,15 @@ export default function HomePage() {
     favoriteRestaurants: favoriteRestaurants.length,
     favoriteRestaurantsType: typeof favoriteRestaurants,
     favoriteRestaurantsArray: Array.isArray(favoriteRestaurants),
-    favoritesLoading
+    favoritesLoading,
   });
 
   return (
-    <div className={`min-h-screen pb-20 ${isDarkMode ? "bg-gray-900" : "bg-white"}`}>
+    <div
+      className={`min-h-screen pb-20 ${
+        isDarkMode ? "bg-gray-900" : "bg-white"
+      }`}
+    >
       {/* 헤더 */}
       <div className={`px-4 py-6 ${isDarkMode ? "bg-gray-800" : "bg-white"}`}>
         <div className="max-w-md mx-auto">
@@ -484,7 +503,9 @@ export default function HomePage() {
                 <p className="text-lg font-bold">
                   <span className="text-[#EB4C34]">버디</span>
                   <span className="text-[#1D1D1D]">가 남긴 맛집 리뷰 </span>
-                  <span className="text-[#EB4C34] text-xl">{sortedReviews.length}</span>
+                  <span className="text-[#EB4C34] text-xl">
+                    {sortedReviews.length}
+                  </span>
                   <span className="text-[#1D1D1D]">개</span>
                 </p>
 
@@ -505,14 +526,18 @@ export default function HomePage() {
                   {showSortMenu && (
                     <div
                       className={`absolute top-full right-0 mt-1 rounded-lg shadow-lg z-10 ${
-                        isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                        isDarkMode
+                          ? "bg-gray-800 border-gray-700"
+                          : "bg-white border-gray-200"
                       } border`}
                     >
                       {sortOptions.map((option) => (
                         <button
                           key={option.value}
                           className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${
-                            isDarkMode ? "text-white hover:bg-gray-700" : "text-gray-900"
+                            isDarkMode
+                              ? "text-white hover:bg-gray-700"
+                              : "text-gray-900"
                           }`}
                           onClick={() => handleSortSelect(option.value)}
                         >
@@ -529,11 +554,14 @@ export default function HomePage() {
               <>
                 <p className="text-lg font-bold">
                   <span className="text-[#EB4C34]">버디</span>
-                  <span className="text-[#1D1D1D]">가 자주 가는 단골 맛집 </span>
-                  <span className="text-[#EB4C34] text-xl">{favoriteRestaurants.length}</span>
+                  <span className="text-[#1D1D1D]">
+                    가 자주 가는 단골 맛집{" "}
+                  </span>
+                  <span className="text-[#EB4C34] text-xl">
+                    {favoriteRestaurants.length}
+                  </span>
                   <span className="text-[#1D1D1D]">곳이에요!</span>
                 </p>
-
                 <div></div> {/* 정렬 버튼 자리 유지용 (필요 시 삭제 가능) */}
               </>
             )}
@@ -547,20 +575,32 @@ export default function HomePage() {
           <>
             {reviewsLoading ? (
               <div className="text-center py-8">
-                <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                <p
+                  className={`${
+                    isDarkMode ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
                   리뷰를 불러오는 중...
                 </p>
               </div>
             ) : sortedReviews.length === 0 ? (
               <div className="text-center py-8">
-                <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                <p
+                  className={`${
+                    isDarkMode ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
                   아직 작성한 리뷰가 없습니다.
                 </p>
-                <p className={`text-sm mt-2 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-                  총 {myReviews.length}개 리뷰 데이터, {formattedReviews.length}개 변환됨
+                <p
+                  className={`text-sm mt-2 ${
+                    isDarkMode ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  버디와 리뷰를 생성하러 가 볼까요?
                 </p>
-                <Button 
-                  onClick={() => router.push('/write')}
+                <Button
+                  onClick={() => router.push("/write")}
                   className="mt-4 bg-red-500 hover:bg-red-600 text-white"
                 >
                   첫 리뷰 작성하기
@@ -579,7 +619,11 @@ export default function HomePage() {
                     {/* 상단: 음식점 이름, 별점, 날짜 */}
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <h3 className={`font-semibold text-sm ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+                        <h3
+                          className={`font-semibold text-sm ${
+                            isDarkMode ? "text-white" : "text-gray-900"
+                          }`}
+                        >
                           {review.restaurantName}
                         </h3>
                         <div className="flex items-center gap-1 mt-1">
@@ -595,20 +639,36 @@ export default function HomePage() {
                               />
                             ))}
                           </div>
-                          <span className={`text-xs ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                          <span
+                            className={`text-xs ${
+                              isDarkMode ? "text-gray-300" : "text-gray-600"
+                            }`}
+                          >
                             {review.rating}
                           </span>
                         </div>
                       </div>
-                      <span className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                      <span
+                        className={`text-xs ${
+                          isDarkMode ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
                         {review.date}
                       </span>
                     </div>
 
                     {/* 위치 정보 */}
                     <div className="flex items-center gap-1 mb-2">
-                      <MapPin className={`w-3 h-3 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
-                      <span className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                      <MapPin
+                        className={`w-3 h-3 ${
+                          isDarkMode ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      />
+                      <span
+                        className={`text-xs ${
+                          isDarkMode ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
                         {review.location}
                       </span>
                     </div>
@@ -616,7 +676,11 @@ export default function HomePage() {
                     {/* 리뷰 내용과 이미지 */}
                     <div className="flex gap-3">
                       <div className="flex-1">
-                        <p className={`text-sm leading-relaxed ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}>
+                        <p
+                          className={`text-sm leading-relaxed ${
+                            isDarkMode ? "text-gray-200" : "text-gray-700"
+                          }`}
+                        >
                           {review.content}
                         </p>
                       </div>
@@ -644,7 +708,11 @@ export default function HomePage() {
           <>
             {favoritesLoading ? (
               <div className="text-center py-8">
-                <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                <p
+                  className={`${
+                    isDarkMode ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
                   즐겨찾기를 불러오는 중...
                 </p>
               </div>
@@ -669,19 +737,24 @@ export default function HomePage() {
                 </p>
               </div>
             ) : (
-              Array.isArray(favoriteRestaurants) && favoriteRestaurants.map((restaurant) => (
+              Array.isArray(favoriteRestaurants) &&
+              favoriteRestaurants.map((restaurant) => (
                 <Card
                   key={restaurant.restaurantId}
                   className="relative overflow-hidden cursor-pointer w-full  transition-colors border-10 shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
-                  onClick={() => handleFavoriteCardClick(restaurant.restaurantName)}
+                  onClick={() =>
+                    handleFavoriteCardClick(restaurant.restaurantName)
+                  }
                 >
                   <CardContent className="p-3 min-h-[90px] relative">
                     {/* 하트 아이콘 - 오른쪽 상단 */}
-                    <div className="absolute top-3 right-3"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite(restaurant.restaurantId);
-                    }}>
+                    <div
+                      className="absolute top-3 right-3"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(restaurant.restaurantId);
+                      }}
+                    >
                       <Image
                         src={
                           favoriteStates[restaurant.restaurantId]
@@ -779,17 +852,22 @@ export default function HomePage() {
           setReviewDetailModal({ isOpen: false, review: null });
           setShareModal({ isOpen: true, title, content });
         }}
-        onFavoriteToggle={async (restaurantId: string, shouldBeFavorited: boolean) => {
+        onFavoriteToggle={async (
+          restaurantId: string,
+          shouldBeFavorited: boolean
+        ) => {
           try {
-            console.log(`즐겨찾기 토글: ${restaurantId}, shouldBeFavorited: ${shouldBeFavorited}`);
+            console.log(
+              `즐겨찾기 토글: ${restaurantId}, shouldBeFavorited: ${shouldBeFavorited}`
+            );
             if (shouldBeFavorited) {
               // 즐겨찾기에 추가
               await addFavorite(restaurantId);
-              console.log('즐겨찾기 추가 완료');
+              console.log("즐겨찾기 추가 완료");
             } else {
               // 즐겨찾기에서 제거
               await removeFavorite(restaurantId);
-              console.log('즐겨찾기 제거 완료');
+              console.log("즐겨찾기 제거 완료");
             }
             // 즐겨찾기 목록 새로고침
             await fetchFavoriteRestaurants();
@@ -800,9 +878,9 @@ export default function HomePage() {
         }}
         onDelete={async (reviewId: string) => {
           try {
-            console.log('리뷰 삭제 시작:', reviewId);
+            console.log("리뷰 삭제 시작:", reviewId);
             await deleteReview(reviewId);
-            console.log('리뷰 삭제 완료');
+            console.log("리뷰 삭제 완료");
             // 리뷰 목록 새로고침
             await fetchMyReviews();
             await fetchFavoriteRestaurants();

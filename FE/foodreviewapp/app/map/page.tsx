@@ -173,6 +173,32 @@ export default function MapPage() {
   };
 
   useEffect(() => {
+    // 카카오맵 스크립트 로드
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JS_KEY}&autoload=false&libraries=services`;
+    document.head.appendChild(script);
+
+    script.onload = () => {
+      window.kakao.maps.load(() => {
+        if (!mapContainer.current) return;
+
+        const options = {
+          center: new window.kakao.maps.LatLng(
+            currentLocation.lat,
+            currentLocation.lng
+          ),
+          level: 3,
+        };
+
+        const mapInstance = new window.kakao.maps.Map(
+          mapContainer.current,
+          options
+        );
+        setMap(mapInstance);
+      });
+    };
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) =>
@@ -186,6 +212,11 @@ export default function MapPage() {
 
     // 레스토랑 데이터 불러오기
     fetchRestaurantData();
+
+    return () => {
+      // 스크립트 제거
+      document.head.removeChild(script);
+    };
   }, []);
 
   // 마커 색상 및 아이콘 가져오기

@@ -419,7 +419,7 @@ export default function StatisticsTab() {
               {statistics.avgRating.toFixed(1)}
             </div>
           </div>
-          <div className="absolute w-[46px] h-[15px] left-1/2 top-[43px] transform -translate-x-1/2">
+          <div className="absolute w-[80px] h-[15px] left-1/2 top-[43px] transform -translate-x-1/2">
             <div className="font-normal text-[11px] leading-[13px] text-center text-white">
               평균 평점
             </div>
@@ -433,7 +433,7 @@ export default function StatisticsTab() {
               {statistics.totalReviewCount}
             </div>
           </div>
-          <div className="absolute w-[60px] h-[15px] left-1/2 top-[43px] transform -translate-x-1/2">
+          <div className="absolute w-[80px] h-[15px] left-1/2 top-[43px] transform -translate-x-1/2">
             <div className="font-normal text-[11px] leading-[13px] text-center text-white">
               총 리뷰 수
             </div>
