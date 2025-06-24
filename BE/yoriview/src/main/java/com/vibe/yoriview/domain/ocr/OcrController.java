@@ -22,37 +22,11 @@ public class OcrController {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     
-    // OCR 입력/출력 디렉토리 경로를 동적으로 찾기
-    private final String OCR_BASE_PATH = findOcrBasePath();
+    // Docker 환경에서 고정 경로 사용
+    private final String OCR_BASE_PATH = "/app/ocr";
     private final String INPUT_DIR = OCR_BASE_PATH + "/input";
     private final String OUTPUT_DIR = OCR_BASE_PATH + "/output";
     private final String PYTHON_SCRIPT_PATH = OCR_BASE_PATH + "/ocr-parser.py";
-
-    /**
-     * OCR 기본 경로를 찾는 메소드
-     * 여러 가능한 경로를 체크하여 Python 스크립트가 있는 경로를 반환
-     */
-    private String findOcrBasePath() {
-        String userDir = System.getProperty("user.dir");
-        String[] possiblePaths = {
-            userDir + "/ocr",                    // Docker 컨테이너 환경 (최우선)
-            userDir + "/BE/yoriview/ocr",        // Spring Boot jar 실행 시 (EC2)
-            "./ocr",                             // 상대 경로 (Docker 내부)
-            "/app/ocr"                           // Docker 절대 경로
-        };
-        
-        for (String path : possiblePaths) {
-            File scriptFile = new File(path + "/ocr-parser.py");
-            if (scriptFile.exists()) {
-                log.info("OCR 스크립트 경로 찾음: {}", path);
-                return path;
-            }
-        }
-        
-        // 기본값으로 현재 디렉토리의 ocr 반환
-        log.warn("OCR 스크립트를 찾을 수 없음. 기본 경로 사용: {}", userDir + "/ocr");
-        return userDir + "/ocr";
-    }
 
     @RequestMapping(value = "/process", method = RequestMethod.OPTIONS)
     public ResponseEntity<?> handleOptions() {
