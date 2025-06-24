@@ -13,6 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,6 +50,9 @@ public class CompleteReviewService {
             // 4. 리뷰 저장
             Review review = saveReview(dto, userId, receipt.getReceiptId(), restaurant.getRestaurantId());
             log.info("리뷰 저장 완료 - ID: {}", review.getReviewId());
+
+            // 5. OCR input 폴더의 이미지 파일 삭제
+            deleteOcrInputFiles();
 
             return CompleteReviewResponseDto.builder()
                     .success(true)
@@ -122,5 +129,36 @@ public class CompleteReviewService {
                 .build();
 
         return reviewRepository.save(review);
+    }
+
+    /**
+     * OCR input 폴더의 이미지 파일들을 삭제합니다.
+     */
+    private void deleteOcrInputFiles() {
+        try {
+            String ocrBasePath = System.getProperty("user.dir") + "/ocr";
+            String inputDir = ocrBasePath + "/input";
+            Path inputDirPath = Paths.get(inputDir);
+            
+            if (Files.exists(inputDirPath) && Files.isDirectory(inputDirPath)) {
+                // input 폴더의 모든 파일 삭제
+                Files.list(inputDirPath)
+                    .filter(Files::isRegularFile)
+                    .forEach(file -> {
+                        try {
+                            Files.delete(file);
+                            log.info("OCR input 파일 삭제됨: {}", file.getFileName());
+                        } catch (IOException e) {
+                            log.warn("OCR input 파일 삭제 실패: {} - {}", file.getFileName(), e.getMessage());
+                        }
+                    });
+                log.info("OCR input 폴더 정리 완료");
+            } else {
+                log.debug("OCR input 폴더가 존재하지 않음: {}", inputDir);
+            }
+        } catch (Exception e) {
+            log.warn("OCR input 파일 삭제 중 오류 발생: {}", e.getMessage());
+            // 파일 삭제 실패는 전체 프로세스에 영향을 주지 않도록 예외를 던지지 않음
+        }
     }
 } 
