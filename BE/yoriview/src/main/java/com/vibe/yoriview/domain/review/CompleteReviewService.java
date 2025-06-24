@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -136,7 +137,7 @@ public class CompleteReviewService {
      */
     private void deleteOcrInputFiles() {
         try {
-            String ocrBasePath = System.getProperty("user.dir") + "/ocr";
+            String ocrBasePath = findOcrBasePath();
             String inputDir = ocrBasePath + "/input";
             Path inputDirPath = Paths.get(inputDir);
             
@@ -160,5 +161,26 @@ public class CompleteReviewService {
             log.warn("OCR input 파일 삭제 중 오류 발생: {}", e.getMessage());
             // 파일 삭제 실패는 전체 프로세스에 영향을 주지 않도록 예외를 던지지 않음
         }
+    }
+
+    /**
+     * OCR 기본 경로를 찾는 메소드
+     */
+    private String findOcrBasePath() {
+        String userDir = System.getProperty("user.dir");
+        String[] possiblePaths = {
+            userDir + "/BE/yoriview/ocr",  // Spring Boot jar 실행 시 (EC2)
+            userDir + "/ocr"               // 로컬 개발 시
+        };
+        
+        for (String path : possiblePaths) {
+            File scriptFile = new File(path + "/ocr-parser.py");
+            if (scriptFile.exists()) {
+                return path;
+            }
+        }
+        
+        // 기본값으로 BE/yoriview/ocr 반환
+        return userDir + "/BE/yoriview/ocr";
     }
 } 
