@@ -126,13 +126,13 @@ function SplashScreen({ onComplete }: { onComplete: () => void }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onComplete();
-    }, 2000); // 2초로 단축
+    }, 3000); // 3초로 변경
 
     return () => clearTimeout(timer);
   }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 z-50 min-h-screen bg-gradient-to-b from-[#FF5722] to-[#FF7043] flex items-center justify-center relative overflow-hidden">
+    <div className="fixed inset-0 z-[9999] min-h-screen bg-gradient-to-b from-[#FF5722] to-[#FF7043] flex items-center justify-center relative overflow-hidden">
       {/* 메인 콘텐츠 */}
       <div className="text-center animate-in fade-in zoom-in duration-1000">
         {/* 로고 */}
@@ -225,8 +225,8 @@ export default function HomePage() {
       // 클라이언트 사이드에서만 실행
       if (typeof window === "undefined") return;
 
-      // 로그인 상태 확인
-      const authToken = localStorage.getItem("authToken");
+      // 로그인 상태 확인 (accessToken으로 통일)
+      const authToken = localStorage.getItem("accessToken");
       const hasShownSplash = localStorage.getItem("hasShownSplash");
 
       console.log("인증 상태 확인:", {
@@ -248,19 +248,19 @@ export default function HomePage() {
       // 스플래시 화면을 보여줄지 결정
       if (!hasShownSplash) {
         setShowSplash(true);
-        // 2초 후 스플래시 화면 종료 (시간 단축)
+        // 3초 후 스플래시 화면 종료
         setTimeout(() => {
           setShowSplash(false);
           setIsLoading(false);
           localStorage.setItem("hasShownSplash", "true");
-        }, 2000);
+        }, 3000);
       } else {
         // 스플래시를 이미 보여줬으면 바로 로딩 종료
         setIsLoading(false);
       }
     };
 
-    // 즉시 실행 - 불필요한 지연 제거
+    // 즉시 실행
     checkAuthStatus();
   }, [router]);
 
@@ -292,14 +292,19 @@ export default function HomePage() {
     }
   }, [sortOrder]);
 
-  // 로딩 중인 경우 스플래시 화면 표시
-  if (isLoading) {
-    return <SplashScreen onComplete={() => {}} />;
+  // 로딩 중인 경우 빈 화면 표시 (리디렉션 중)
+  if (isLoading && !showSplash) {
+    return null;
   }
 
   // 인증되지 않은 경우 빈 화면 (리디렉션 중)
-  if (!globalIsAuthenticated) {
+  if (!globalIsAuthenticated && !showSplash) {
     return null;
+  }
+
+  // 스플래시 화면이 표시 중이면 스플래시만 보여줌
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
 
   // 플로팅 버튼 클릭 핸들러
@@ -332,11 +337,6 @@ export default function HomePage() {
       reviews: restaurantReviews,
     });
   };
-
-  // 스플래시 화면이 표시 중이면 스플래시만 보여줌
-  if (showSplash) {
-    return <SplashScreen onComplete={() => setShowSplash(false)} />;
-  }
 
   return (
     <div className={`min-h-screen pb-20 ${isDarkMode ? "bg-gray-900" : "bg-white"}`}>
