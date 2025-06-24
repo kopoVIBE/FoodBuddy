@@ -51,6 +51,7 @@ export default function WritePage() {
   const [ocrResult, setOcrResult] = useState<OCRResult | null>(null);
   const [isProcessingOCR, setIsProcessingOCR] = useState(false);
   const [rating, setRating] = useState(0);
+  const [restaurantCategory, setRestaurantCategory] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // OCR API 호출 함수 (Spring Boot 백엔드)
@@ -89,10 +90,14 @@ export default function WritePage() {
     }
   };
 
-  const resizeImage = (file: File, maxWidth: number = 800, quality: number = 0.7): Promise<string> => {
+  const resizeImage = (
+    file: File,
+    maxWidth: number = 800,
+    quality: number = 0.7
+  ): Promise<string> => {
     return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d')!;
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d")!;
       const img = new window.Image();
 
       img.onload = () => {
@@ -105,7 +110,7 @@ export default function WritePage() {
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
         // Base64로 변환 (JPEG, 품질 70%)
-        const resizedBase64 = canvas.toDataURL('image/jpeg', quality);
+        const resizedBase64 = canvas.toDataURL("image/jpeg", quality);
         resolve(resizedBase64);
       };
 
@@ -168,12 +173,10 @@ export default function WritePage() {
       return;
     }
 
-    // 리뷰 작성 모달 표시
     setShowModal(true);
-    setModalStep(4); // 바로 작성 단계로
+    setModalStep(4);
 
     try {
-      // OpenAI API를 사용한 리뷰 생성 요청
       const reviewRequest: ReviewGenerationRequest = {
         restaurantName: ocrResult.restaurantName,
         menuItems: ocrResult.items,
@@ -185,13 +188,14 @@ export default function WritePage() {
       console.log("리뷰 생성 요청:", reviewRequest);
 
       const response = await generateReview(reviewRequest);
+      console.log("리뷰 생성 완료:", response);
 
-      console.log("리뷰 생성 완료:", response.review);
+      // 리뷰와 카테고리 저장
+      setGeneratedReview(response.review);
+      setRestaurantCategory(response.category);
 
-      // 3초 후 모달 닫고 생성된 리뷰 표시
       setTimeout(() => {
         setShowModal(false);
-        setGeneratedReview(response.review);
         setShowGeneratedReview(true);
       }, 3000);
     } catch (error: any) {
@@ -239,28 +243,25 @@ export default function WritePage() {
     }
 
     try {
-      // OCR 메뉴 항목을 API 형식에 맞게 변환
       const ocrMenuItems = ocrResult.items.map((item) => ({
         name: item.name,
         price: item.price,
         quantity: 1,
       }));
 
-      // Base64 데이터에서 prefix 제거
-      const base64Data = uploadedImage ? uploadedImage.split(',')[1] : '';
+      const base64Data = uploadedImage ? uploadedImage.split(",")[1] : "";
 
-      // 통합 리뷰 저장 요청 데이터 구성
       const reviewData: CompleteReviewRequest = {
         // OCR 정보
         ocrRestaurantName: ocrResult.restaurantName,
         ocrAddress: ocrResult.address || "",
-        originalImg: base64Data, // prefix 제거된 Base64 데이터만 저장
+        originalImg: base64Data,
         receiptDate: new Date().toISOString().split("T")[0],
         ocrMenuItems: ocrMenuItems,
 
         // 식당 정보
         restaurantName: ocrResult.restaurantName,
-        restaurantCategory: "일반음식점",
+        restaurantCategory: restaurantCategory || "기타",
         restaurantAddress: ocrResult.address || "",
         locationId: "SEOUL",
 
@@ -289,6 +290,7 @@ export default function WritePage() {
         setOcrCompleted(false);
         setAdditionalWords("");
         setRating(0);
+        setRestaurantCategory("");
 
         console.log("저장된 리뷰 정보:", response);
       } else {
@@ -419,7 +421,9 @@ export default function WritePage() {
           {/* 다음 단계 버튼 */}
           <Button
             onClick={handleNext}
-            disabled={!uploadedImage || !selectedTone || !ocrCompleted || !rating}
+            disabled={
+              !uploadedImage || !selectedTone || !ocrCompleted || !rating
+            }
             className="w-full bg-[#FF5722] hover:bg-[#E64A19] text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
             다음 단계
@@ -438,6 +442,9 @@ export default function WritePage() {
               </div>
               <div>
                 <strong>주소:</strong> {ocrResult.address || "없음"}
+              </div>
+              <div>
+                <strong>카테고리:</strong> {restaurantCategory || "분석 중..."}
               </div>
               <div>
                 <strong>총 금액:</strong> {ocrResult.total?.toLocaleString()}원

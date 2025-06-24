@@ -124,6 +124,7 @@ export interface ReviewGenerationRequest {
 
 export interface ReviewGenerationResponse {
   review: string;
+  category: string;
 }
 
 const getToneInstruction = (tone: string): string => {
@@ -180,24 +181,42 @@ export const generateReview = async (
     const satisfactionLevel = getSatisfactionLevel(data.rating);
 
     // OpenAI 프롬프트 구성
-    let prompt = `다음 정보를 바탕으로 음식점 리뷰를 작성해주세요:
+    let prompt = `당신은 전문적인 음식점 리뷰어입니다. 다음 정보를 바탕으로 음식점 리뷰와 카테고리를 생성해주세요.
 
+[입력 정보]
 식당명: ${data.restaurantName}
 주문 메뉴: ${menuInfo}
 만족도: ${satisfactionLevel}
 말투: ${data.tone}
 ${toneInstruction}
 
-요구사항:
+[요구사항]
+1. 리뷰 작성 요구사항:
 - 실제 방문한 것처럼 생생하게 작성
 - 메뉴의 맛, 가격, 서비스에 대한 언급 포함
-- 100-200자 정도의 적당한 길이
-- 자연스럽고 진정성 있는 표현 사용`;
+- 정확히 150자 이내로 작성 (마지막 문장이 잘리지 않도록 주의)
+- 자연스럽고 진정성 있는 표현 사용
+${
+  data.additionalKeywords
+    ? `- 다음 키워드를 자연스럽게 포함: ${data.additionalKeywords}`
+    : ""
+}
 
-    // 추가 키워드가 있으면 포함
-    if (data.additionalKeywords && data.additionalKeywords.trim()) {
-      prompt += `\n- 다음 키워드를 자연스럽게 포함: ${data.additionalKeywords}`;
-    }
+2. 카테고리 분류:
+- 식당명과 위치를 검색하여, 검색 결과를 기반으로 다음 중 가장 적합한 카테고리 하나를 선택:
+  - 한식
+  - 중식
+  - 일식
+  - 양식
+  - 디저트
+
+[출력 형식]
+{
+  "review": "리뷰 내용",
+  "category": "선택한 카테고리"
+}
+
+주의: 반드시 위의 JSON 형식으로 출력하며, 리뷰는 150자를 넘지 않고 문장이 완성되도록 작성해주세요.`;
 
     // OpenAI API 호출
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -210,12 +229,17 @@ ${toneInstruction}
         model: "gpt-3.5-turbo",
         messages: [
           {
+            role: "system",
+            content:
+              "당신은 전문적인 음식점 리뷰어입니다. 주어진 형식에 맞춰 정확하게 응답해주세요.",
+          },
+          {
             role: "user",
             content: prompt,
           },
         ],
-        max_tokens: 300,
-        temperature: 0.8,
+        max_tokens: 500,
+        temperature: 0.7,
       }),
     });
 
@@ -226,9 +250,23 @@ ${toneInstruction}
     }
 
     const result = await response.json();
-    const generatedReview = result.choices[0].message.content.trim();
+    const generatedContent = result.choices[0].message.content.trim();
 
-    return { review: generatedReview };
+    // JSON 파싱
+    try {
+      const parsedResponse = JSON.parse(generatedContent);
+      return {
+        review: parsedResponse.review,
+        category: parsedResponse.category,
+      };
+    } catch (error) {
+      console.error("AI 응답 파싱 실패:", error);
+      // 파싱 실패 시 기본값 반환
+      return {
+        review: generatedContent.substring(0, 150),
+        category: "한식",
+      };
+    }
   } catch (error: any) {
     console.error("OpenAI 리뷰 생성 중 오류:", error);
     throw new Error(`리뷰 생성에 실패했습니다: ${error.message}`);
@@ -290,13 +328,13 @@ export interface CompleteReviewRequest {
     price: number;
     quantity: number;
   }>;
-  
+
   // 식당 정보
   restaurantName: string;
   restaurantCategory: string;
   restaurantAddress: string;
   locationId: string;
-  
+
   // 리뷰 정보
   styleId: string;
   reviewContent: string;
@@ -312,7 +350,9 @@ export interface CompleteReviewResponse {
 }
 
 // 통합 리뷰 저장 API
-export const saveCompleteReview = async (data: CompleteReviewRequest): Promise<CompleteReviewResponse> => {
+export const saveCompleteReview = async (
+  data: CompleteReviewRequest
+): Promise<CompleteReviewResponse> => {
   const response = await axiosInstance.post("/api/reviews/complete", data);
   return response.data;
 };
@@ -337,13 +377,19 @@ export interface MyReviewResponse {
 }
 
 // 사용자 상세 리뷰 목록 조회 API
-export const getMyDetailedReviews = async (order: string = "latest"): Promise<MyReviewResponse[]> => {
-  const response = await axiosInstance.get(`/api/reviews/me/detailed?order=${order}`);
+export const getMyDetailedReviews = async (
+  order: string = "latest"
+): Promise<MyReviewResponse[]> => {
+  const response = await axiosInstance.get(
+    `/api/reviews/me/detailed?order=${order}`
+  );
   return response.data;
 };
 
 // 사용자 리뷰 목록 조회 API (기존)
-export const getMyReviews = async (order: string = "latest"): Promise<MyReviewResponse[]> => {
+export const getMyReviews = async (
+  order: string = "latest"
+): Promise<MyReviewResponse[]> => {
   const response = await axiosInstance.get(`/api/reviews/me?order=${order}`);
   return response.data;
 };
@@ -351,11 +397,11 @@ export const getMyReviews = async (order: string = "latest"): Promise<MyReviewRe
 // 리뷰 삭제 API
 export const deleteReview = async (reviewId: string): Promise<void> => {
   try {
-    console.log('리뷰 삭제 요청:', reviewId);
+    console.log("리뷰 삭제 요청:", reviewId);
     await axiosInstance.delete(`/api/reviews/${reviewId}`);
-    console.log('리뷰 삭제 성공:', reviewId);
+    console.log("리뷰 삭제 성공:", reviewId);
   } catch (error) {
-    console.error('리뷰 삭제 실패:', error);
+    console.error("리뷰 삭제 실패:", error);
     throw error;
   }
 };
@@ -382,18 +428,18 @@ export interface FavoriteRestaurantInfo {
 
 // 내 즐겨찾기 목록 조회
 export const getMyFavorites = async (): Promise<FavoriteResponse[]> => {
-  const response = await axiosInstance.get('/api/favorites/me');
+  const response = await axiosInstance.get("/api/favorites/me");
   return response.data;
 };
 
 // 즐겨찾기 추가
 export const addFavorite = async (restaurantId: string): Promise<void> => {
   try {
-    console.log('즐겨찾기 추가 요청:', restaurantId);
+    console.log("즐겨찾기 추가 요청:", restaurantId);
     await axiosInstance.post(`/api/favorites/${restaurantId}`);
-    console.log('즐겨찾기 추가 성공:', restaurantId);
+    console.log("즐겨찾기 추가 성공:", restaurantId);
   } catch (error) {
-    console.error('즐겨찾기 추가 실패:', error);
+    console.error("즐겨찾기 추가 실패:", error);
     throw error;
   }
 };
@@ -401,11 +447,11 @@ export const addFavorite = async (restaurantId: string): Promise<void> => {
 // 즐겨찾기 제거
 export const removeFavorite = async (restaurantId: string): Promise<void> => {
   try {
-    console.log('즐겨찾기 제거 요청:', restaurantId);
+    console.log("즐겨찾기 제거 요청:", restaurantId);
     await axiosInstance.delete(`/api/favorites/${restaurantId}`);
-    console.log('즐겨찾기 제거 성공:', restaurantId);
+    console.log("즐겨찾기 제거 성공:", restaurantId);
   } catch (error) {
-    console.error('즐겨찾기 제거 실패:', error);
+    console.error("즐겨찾기 제거 실패:", error);
     throw error;
   }
 };
@@ -417,13 +463,15 @@ export const isFavorited = async (restaurantId: string): Promise<boolean> => {
 };
 
 // 즐겨찾기한 음식점 상세 정보 조회 (통계 포함)
-export const getMyFavoriteRestaurants = async (): Promise<FavoriteRestaurantInfo[]> => {
+export const getMyFavoriteRestaurants = async (): Promise<
+  FavoriteRestaurantInfo[]
+> => {
   try {
-    const response = await axiosInstance.get('/api/favorites/me/details');
-    console.log('즐겨찾기 API 응답:', response.data);
+    const response = await axiosInstance.get("/api/favorites/me/details");
+    console.log("즐겨찾기 API 응답:", response.data);
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
-    console.error('즐겨찾기 API 호출 실패:', error);
+    console.error("즐겨찾기 API 호출 실패:", error);
     // 일시적으로 빈 배열 반환
     return [];
   }
