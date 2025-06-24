@@ -7,7 +7,8 @@ RUN gradle build -x test
 FROM openjdk:17-slim
 
 # Python 설치
-RUN apt-get update && apt-get install -y \
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
