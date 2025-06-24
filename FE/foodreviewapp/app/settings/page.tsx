@@ -45,20 +45,7 @@ export default function SettingsPage() {
       }`}
     >
       <div className="max-w-md mx-auto px-4 py-6 space-y-6">
-        {/* 프로필 섹션 */}
-        <Card className={isDarkMode ? "bg-gray-800 border-gray-700" : ""}>
-          <CardHeader>
-            <CardTitle
-              className={`flex items-center gap-2 ${
-                isDarkMode ? "text-white" : ""
-              }`}
-            >
-              <User className="h-5 w-5" />
-              프로필
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-[#FFF6EA] rounded-full flex items-center justify-center">
                 <Image
                   src="/logo.svg"
@@ -83,30 +70,25 @@ export default function SettingsPage() {
                 </p>
               </div>
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowProfileModal(true)}
-                className={
-                  isDarkMode
-                    ? "border-gray-600 text-gray-300 hover:bg-gray-700"
-                    : ""
-                }
-              >
-                편집
-              </Button>
+  size="sm"
+  onClick={() => setShowProfileModal(true)}
+  className="h-[22px] px-3 bg-[#BCBCBC] hover:bg-gray-300 text-white text-[12px] font-medium rounded-[10px]"
+>
+  수정
+</Button>
+
             </div>
-          </CardContent>
-        </Card>
 
         {/* 앱 설정 */}
         <Card className={isDarkMode ? "bg-gray-800 border-gray-700" : ""}>
           <CardHeader>
             <CardTitle
-              className={`flex items-center gap-2 ${
+              className={`flex items-center gap-2 text-sm font-semibold ${
                 isDarkMode ? "text-white" : ""
               }`}
             >
-              <Palette className="h-5 w-5" />앱 설정
+              <Palette className="h-5 w-5" />
+              앱 설정
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -130,7 +112,6 @@ export default function SettingsPage() {
               />
             </div>
 
-            <Separator className={isDarkMode ? "bg-gray-700" : ""} />
 
             <div>
               <Label className={isDarkMode ? "text-white" : ""}>언어</Label>
@@ -160,8 +141,6 @@ export default function SettingsPage() {
                 </SelectContent>
               </Select>
             </div>
-
-            <Separator className={isDarkMode ? "bg-gray-700" : ""} />
 
             {/* 로그아웃 버튼 */}
             <div className="pt-2">
