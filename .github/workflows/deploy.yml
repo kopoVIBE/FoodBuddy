@@ -54,6 +54,7 @@ jobs:
           docker build \
             --build-arg NEXT_PUBLIC_LOCAL_BACK_URL=${{ secrets.NEXT_PUBLIC_LOCAL_BACK_URL }} \
             --build-arg NEXT_PUBLIC_KAKAO_JAVA_SCRIPT_KEY=${{ secrets.NEXT_PUBLIC_KAKAO_JAVA_SCRIPT_KEY }} \
+            --build-arg NEXT_PUBLIC_OPENAI_API_KEY=${{ secrets.NEXT_PUBLIC_OPENAI_API_KEY }} \
             -t $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG . 2>&1 | tee frontend_build.log
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG
           echo "✅ 프론트엔드 빌드 완료: $(date)"
@@ -160,6 +161,10 @@ jobs:
             echo "CLOVA_OCR_SECRET_KEY=${{ secrets.CLOVA_OCR_SECRET_KEY }}" >> .env
             echo "CLOVA_OCR_APIGW_INVOKE_URL=${{ secrets.CLOVA_OCR_APIGW_INVOKE_URL }}" >> .env
             echo "GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}" >> .env
+
+            # OpenAI API Key 추가
+            echo "🤖 OpenAI API Key 추가"
+            echo "NEXT_PUBLIC_OPENAI_API_KEY=${{ secrets.NEXT_PUBLIC_OPENAI_API_KEY }}" >> .env
 
             # ECR 로그인
             echo "🔑 ECR 로그인"
