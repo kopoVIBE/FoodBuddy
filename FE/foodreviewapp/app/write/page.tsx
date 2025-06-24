@@ -462,39 +462,6 @@ export default function WritePage() {
           </Button>
         </div>
 
-        {/* OCR 결과 디버그 (개발용) */}
-        {ocrResult && (
-          <div className="space-y-4 p-4 bg-gray-100 rounded-lg">
-            <h3 className="font-medium text-gray-900">
-              🔍 OCR 결과 (디버그용)
-            </h3>
-            <div className="text-sm space-y-2">
-              <div>
-                <strong>식당명:</strong> {ocrResult.restaurantName}
-              </div>
-              <div>
-                <strong>주소:</strong> {ocrResult.address || "없음"}
-              </div>
-              <div>
-                <strong>카테고리:</strong> {restaurantCategory || "분석 중..."}
-              </div>
-              <div>
-                <strong>총 금액:</strong> {ocrResult.total?.toLocaleString()}원
-              </div>
-              <div>
-                <strong>메뉴 항목들:</strong>
-              </div>
-              <ul className="ml-4">
-                {ocrResult.items.map((item, index) => (
-                  <li key={index}>
-                    • {item.name}: {item.price.toLocaleString()}원
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
-
         {/* 생성된 리뷰 */}
         {showGeneratedReview && (
           <div className="space-y-4">
