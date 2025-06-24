@@ -286,7 +286,7 @@ export default function WritePage() {
 
       if (response.success) {
         alert(
-          `리뷰가 성공적으로 저장되었습니다!\n리뷰 ID: ${response.reviewId}`
+          "리뷰가 성공적으로 저장되었습니다!"
         );
 
         console.log("저장된 리뷰 정보:", response);
