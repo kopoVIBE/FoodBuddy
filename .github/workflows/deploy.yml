@@ -87,6 +87,13 @@ jobs:
         run: |
           echo "🏗️ 백엔드 빌드 시작: $(date)"
           echo "📦 도커 이미지 태그: $IMAGE_TAG"
+
+          # OCR 환경변수를 .env 파일로 생성
+          echo "🔑 OCR 환경변수 설정"
+          echo "CLOVA_OCR_SECRET_KEY=${{ secrets.CLOVA_OCR_SECRET_KEY }}" > .env
+          echo "CLOVA_OCR_APIGW_INVOKE_URL=${{ secrets.CLOVA_OCR_APIGW_INVOKE_URL }}" >> .env
+          echo "GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}" >> .env
+
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG . 2>&1 | tee backend_build.log
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG
           echo "✅ 백엔드 빌드 완료: $(date)"
@@ -147,6 +154,12 @@ jobs:
             echo "ECR_REPOSITORY_FRONTEND=${{ env.ECR_REPOSITORY_FRONTEND }}" >> .env
             echo "ECR_REPOSITORY_BACKEND=${{ env.ECR_REPOSITORY_BACKEND }}" >> .env
             echo "IMAGE_TAG=${{ github.sha }}" >> .env
+
+            # OCR 환경변수 추가
+            echo "🔑 OCR 환경변수 추가"
+            echo "CLOVA_OCR_SECRET_KEY=${{ secrets.CLOVA_OCR_SECRET_KEY }}" >> .env
+            echo "CLOVA_OCR_APIGW_INVOKE_URL=${{ secrets.CLOVA_OCR_APIGW_INVOKE_URL }}" >> .env
+            echo "GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}" >> .env
 
             # ECR 로그인
             echo "🔑 ECR 로그인"

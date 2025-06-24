@@ -35,8 +35,10 @@ public class OcrController {
     private String findOcrBasePath() {
         String userDir = System.getProperty("user.dir");
         String[] possiblePaths = {
-            userDir + "/BE/yoriview/ocr",  // Spring Boot jar 실행 시 (EC2)
-            userDir + "/ocr"               // 로컬 개발 시
+            userDir + "/ocr",                    // Docker 컨테이너 환경 (최우선)
+            userDir + "/BE/yoriview/ocr",        // Spring Boot jar 실행 시 (EC2)
+            "./ocr",                             // 상대 경로 (Docker 내부)
+            "/app/ocr"                           // Docker 절대 경로
         };
         
         for (String path : possiblePaths) {
@@ -47,9 +49,9 @@ public class OcrController {
             }
         }
         
-        // 기본값으로 BE/yoriview/ocr 반환
-        log.warn("OCR 스크립트를 찾을 수 없음. 기본 경로 사용: {}", userDir + "/BE/yoriview/ocr");
-        return userDir + "/BE/yoriview/ocr";
+        // 기본값으로 현재 디렉토리의 ocr 반환
+        log.warn("OCR 스크립트를 찾을 수 없음. 기본 경로 사용: {}", userDir + "/ocr");
+        return userDir + "/ocr";
     }
 
     @RequestMapping(value = "/process", method = RequestMethod.OPTIONS)
