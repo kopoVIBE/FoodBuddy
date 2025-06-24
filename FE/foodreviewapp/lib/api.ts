@@ -348,4 +348,73 @@ export const getMyReviews = async (order: string = "latest"): Promise<MyReviewRe
   return response.data;
 };
 
+// 즐겨찾기 관련 API
+export interface FavoriteResponse {
+  favoriteId: string;
+  userId: string;
+  restaurantId: string;
+  createdAt: string;
+}
+
+export interface FavoriteRestaurantInfo {
+  favoriteId: string;
+  restaurantId: string;
+  restaurantName: string;
+  restaurantAddress: string;
+  restaurantCategory: string;
+  rating: number;
+  visitCount: number;
+  lastVisit: string;
+  createdAt: string;
+}
+
+// 내 즐겨찾기 목록 조회
+export const getMyFavorites = async (): Promise<FavoriteResponse[]> => {
+  const response = await axiosInstance.get('/api/favorites/me');
+  return response.data;
+};
+
+// 즐겨찾기 추가
+export const addFavorite = async (restaurantId: string): Promise<void> => {
+  try {
+    console.log('즐겨찾기 추가 요청:', restaurantId);
+    await axiosInstance.post(`/api/favorites/${restaurantId}`);
+    console.log('즐겨찾기 추가 성공:', restaurantId);
+  } catch (error) {
+    console.error('즐겨찾기 추가 실패:', error);
+    throw error;
+  }
+};
+
+// 즐겨찾기 제거
+export const removeFavorite = async (restaurantId: string): Promise<void> => {
+  try {
+    console.log('즐겨찾기 제거 요청:', restaurantId);
+    await axiosInstance.delete(`/api/favorites/${restaurantId}`);
+    console.log('즐겨찾기 제거 성공:', restaurantId);
+  } catch (error) {
+    console.error('즐겨찾기 제거 실패:', error);
+    throw error;
+  }
+};
+
+// 특정 음식점 즐겨찾기 여부 확인
+export const isFavorited = async (restaurantId: string): Promise<boolean> => {
+  const response = await axiosInstance.get(`/api/favorites/me/${restaurantId}`);
+  return response.data;
+};
+
+// 즐겨찾기한 음식점 상세 정보 조회 (통계 포함)
+export const getMyFavoriteRestaurants = async (): Promise<FavoriteRestaurantInfo[]> => {
+  try {
+    const response = await axiosInstance.get('/api/favorites/me/details');
+    console.log('즐겨찾기 API 응답:', response.data);
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('즐겨찾기 API 호출 실패:', error);
+    // 일시적으로 빈 배열 반환
+    return [];
+  }
+};
+
 export default axiosInstance;

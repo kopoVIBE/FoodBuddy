@@ -42,5 +42,12 @@ public class FavoriteController {
         String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return favoriteService.isFavorited(userId, restaurantId);
     }
+
+    // [GET] 즐겨찾기한 음식점들의 상세 정보 조회 (통계 포함)
+    @GetMapping("/me/details")
+    public List<FavoriteRestaurantDto> myFavoriteRestaurants() {
+        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return favoriteService.getMyFavoriteRestaurants(userId);
+    }
 }
 
