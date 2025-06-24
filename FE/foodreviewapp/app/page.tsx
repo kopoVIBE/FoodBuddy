@@ -12,7 +12,15 @@ import RestaurantDetailModal from "@/components/restaurant-detail-modal";
 import RestaurantReviewsModal from "@/components/restaurant-reviews-modal";
 import { useApp } from "@/contexts/app-context";
 import { useRouter } from "next/navigation";
-import { getMyDetailedReviews, MyReviewResponse } from "@/lib/api";
+import { 
+  getMyDetailedReviews, 
+  MyReviewResponse, 
+  getMyFavoriteRestaurants,
+  FavoriteRestaurantInfo,
+  addFavorite,
+  removeFavorite,
+  deleteReview
+} from "@/lib/api";
 
 // 임시 데이터
 const myReviews = [
@@ -70,57 +78,7 @@ const myReviews = [
   },
 ];
 
-// 즐겨찾기 음식점 데이터
-const favoriteRestaurants = [
-  {
-    id: 1,
-    name: "비놀릭",
-    location: "서울시 광진구 자양동 72",
-    rating: 4.9,
-    visitCount: 29,
-    lastVisit: "2025-06-06",
-  },
-  {
-    id: 2,
-    name: "맛있는 김치찌개",
-    location: "서울시 강남구",
-    rating: 4.5,
-    visitCount: 15,
-    lastVisit: "2024-12-20",
-  },
-  {
-    id: 3,
-    name: "맛없는 김치찌개",
-    location: "서울시 강남구",
-    rating: 4.5,
-    visitCount: 15,
-    lastVisit: "2024-12-20",
-  },
-  {
-    id: 4,
-    name: "맛있나 김치찌개",
-    location: "서울시 강남구",
-    rating: 4.5,
-    visitCount: 15,
-    lastVisit: "2024-12-20",
-  },
-  {
-    id: 5,
-    name: "맛이어때 김치찌개",
-    location: "서울시 강남구",
-    rating: 4.5,
-    visitCount: 15,
-    lastVisit: "2024-12-20",
-  },
-  {
-    id: 6,
-    name: "맛있어 김치찌개",
-    location: "서울시 강남구",
-    rating: 4.5,
-    visitCount: 15,
-    lastVisit: "2024-12-20",
-  }
-];
+// 하드코딩된 즐겨찾기 데이터 제거됨 - 이제 API에서 가져옴
 
 // 스플래시 화면 컴포넌트
 function SplashScreen({ onComplete }: { onComplete: () => void }) {
@@ -204,20 +162,67 @@ export default function HomePage() {
     reviews: [],
   });
 
-  // 즐겨찾기 탭용 데이터
-  const favoriteReviews = useMemo(() => {
-    return favoriteRestaurants;
-  }, []);
+  // 즐겨찾기 데이터 상태
+  const [favoriteRestaurants, setFavoriteRestaurants] = useState<FavoriteRestaurantInfo[]>([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
 
-  const [favoriteStates, setFavoriteStates] = useState<{ [key: number]: boolean }>(() =>
-    Object.fromEntries(favoriteReviews.map((r) => [r.id, true]))
-  );
+  const [favoriteStates, setFavoriteStates] = useState<{ [key: string]: boolean }>({});
 
-  const toggleFavorite = (id: number) => {
-    setFavoriteStates((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+  // 즐겨찾기 데이터 불러오기
+  const fetchFavoriteRestaurants = async () => {
+    try {
+      setFavoritesLoading(true);
+      console.log("즐겨찾기 데이터 요청 시작");
+      const favorites = await getMyFavoriteRestaurants();
+      console.log("받은 즐겨찾기 데이터:", favorites);
+      
+      // API 응답이 배열인지 확인
+      if (Array.isArray(favorites)) {
+        setFavoriteRestaurants(favorites);
+        
+        // 초기 즐겨찾기 상태 설정
+        const initialStates = Object.fromEntries(
+          favorites.map((fav) => [fav.restaurantId, true])
+        );
+        setFavoriteStates(initialStates);
+      } else {
+        console.error("즐겨찾기 데이터가 배열이 아닙니다:", typeof favorites, favorites);
+        setFavoriteRestaurants([]);
+        setFavoriteStates({});
+      }
+    } catch (error) {
+      console.error("즐겨찾기 데이터 불러오기 실패:", error);
+      setFavoriteRestaurants([]);
+      setFavoriteStates({});
+    } finally {
+      setFavoritesLoading(false);
+    }
+  };
+
+  const toggleFavorite = async (restaurantId: string) => {
+    try {
+      const isCurrentlyFavorited = favoriteStates[restaurantId];
+      
+      if (isCurrentlyFavorited) {
+        await removeFavorite(restaurantId);
+        setFavoriteStates((prev) => ({
+          ...prev,
+          [restaurantId]: false,
+        }));
+        // 즐겨찾기 목록에서 제거
+        setFavoriteRestaurants((prev) => prev.filter(fav => fav.restaurantId !== restaurantId));
+      } else {
+        await addFavorite(restaurantId);
+        setFavoriteStates((prev) => ({
+          ...prev,
+          [restaurantId]: true,
+        }));
+        // 데이터를 다시 불러와서 최신 상태로 업데이트
+        fetchFavoriteRestaurants();
+      }
+    } catch (error) {
+      console.error("즐겨찾기 토글 실패:", error);
+    }
   };
 
   // 실제 리뷰 데이터
@@ -255,6 +260,9 @@ export default function HomePage() {
         }
       }
 
+      // 즐겨찾기 상태 확인
+      const isFavorited = favoriteStates[review.restaurantId] || false;
+
       return {
         id: parseInt(review.reviewId.replace(/-/g, '').substring(0, 8), 16),
         restaurantName: review.restaurantName || "알 수 없는 식당",
@@ -264,13 +272,15 @@ export default function HomePage() {
         content: review.content,
         image: imageUrl,
         tags: [review.restaurantCategory || "기타"],
-        isFavorite: false,
+        isFavorite: isFavorited,
         receiptImage: imageUrl,
+        restaurantId: review.restaurantId, // 즐겨찾기 기능을 위해 추가
+        reviewId: review.reviewId, // 리뷰 삭제를 위해 추가
       };
     });
     console.log("변환된 리뷰 데이터:", formatted);
     return formatted;
-  }, [myReviews]);
+  }, [myReviews, favoriteStates]);
 
   // 스플래시 화면과 인증 상태 확인
   useEffect(() => {
@@ -295,10 +305,12 @@ export default function HomePage() {
           setIsLoading(false);
           localStorage.setItem("hasShownSplash", "true");
           fetchMyReviews();
+          fetchFavoriteRestaurants();
         }, 3000);
       } else {
         setIsLoading(false);
         fetchMyReviews();
+        fetchFavoriteRestaurants();
       }
     };
 
@@ -393,7 +405,11 @@ export default function HomePage() {
     formattedReviews: formattedReviews.length,
     sortedReviews: sortedReviews.length,
     reviewsLoading,
-    activeTab
+    activeTab,
+    favoriteRestaurants: favoriteRestaurants.length,
+    favoriteRestaurantsType: typeof favoriteRestaurants,
+    favoriteRestaurantsArray: Array.isArray(favoriteRestaurants),
+    favoritesLoading
   });
 
   return (
@@ -514,7 +530,7 @@ export default function HomePage() {
                 <p className="text-lg font-bold">
                   <span className="text-[#EB4C34]">버디</span>
                   <span className="text-[#1D1D1D]">가 자주 가는 단골 맛집 </span>
-                  <span className="text-[#EB4C34] text-xl">{favoriteReviews.length}</span>
+                  <span className="text-[#EB4C34] text-xl">{favoriteRestaurants.length}</span>
                   <span className="text-[#1D1D1D]">곳이에요!</span>
                 </p>
 
@@ -626,82 +642,13 @@ export default function HomePage() {
         {/* 즐겨찾기 탭 */}
         {activeTab === "favorites" && (
           <>
-            {favoriteReviews.map((restaurant) => (
-              <Card
-                key={restaurant.id}
-                className="relative overflow-hidden cursor-pointer w-full  transition-colors border-10 shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
-                onClick={() => handleFavoriteCardClick(restaurant.name)}
-              >
-                <CardContent className="p-3 min-h-[90px] relative">
-                  {/* 하트 아이콘 - 오른쪽 상단 */}
-                  <div className="absolute top-3 right-3"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFavorite(restaurant.id);
-                  }}>
-                    <Image
-                      src={
-                        favoriteStates[restaurant.id]
-                          ? "/icons/heart-filled.svg"
-                          : "/icons/heart-unfilled.svg"
-                      }
-                      alt="Heart"
-                      width={20}
-                      height={18}
-                      className="w-5 h-[18px] cursor-pointe"
-                    />
-                  </div>
-
-                  {/* 메인 콘텐츠 */}
-                  <div className="pr-8">
-                    {/* 음식점 이름과 별점 */}
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-[13.2px] font-medium text-[#333333] leading-[15.6px]">
-                        {restaurant.name}
-                      </h3>
-                      <div className="flex items-center gap-1">
-                        <Image
-                          src="/icons/star-filled.svg"
-                          alt="Star"
-                          width={12}
-                          height={12}
-                          className="w-3 h-3"
-                        />
-                        <span className="text-[13.2px] font-medium text-[#333333] leading-[15.6px]">
-                          {restaurant.rating}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 주소 */}
-                    <div className="flex items-center gap-1 mb-2">
-                      <Image
-                        src="/icons/location-pin.svg"
-                        alt="Location"
-                        width={7}
-                        height={10}
-                        className="w-[7px] h-[10px]"
-                      />
-                      <span className="text-[9.6px] font-normal text-[#BCBCBC] leading-[10.8px]">
-                        {restaurant.location}
-                      </span>
-                    </div>
-
-                    {/* 방문 정보 */}
-                    <div className="space-y-1">
-                      <div className="text-[10.8px] font-normal text-[#666666] leading-[13.2px]">
-                        방문 횟수 : {restaurant.visitCount}회
-                      </div>
-                      <div className="text-[10.8px] font-normal text-[#666666] leading-[13.2px]">
-                        최근 방문 : {restaurant.lastVisit}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-
-            {favoriteReviews.length === 0 && (
+            {favoritesLoading ? (
+              <div className="text-center py-8">
+                <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                  즐겨찾기를 불러오는 중...
+                </p>
+              </div>
+            ) : favoriteRestaurants.length === 0 ? (
               <div className="text-center py-12">
                 <Image
                   src="/icons/heart-filled.svg"
@@ -721,6 +668,81 @@ export default function HomePage() {
                   마음에 드는 음식점을 즐겨찾기에 추가해보세요
                 </p>
               </div>
+            ) : (
+              Array.isArray(favoriteRestaurants) && favoriteRestaurants.map((restaurant) => (
+                <Card
+                  key={restaurant.restaurantId}
+                  className="relative overflow-hidden cursor-pointer w-full  transition-colors border-10 shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
+                  onClick={() => handleFavoriteCardClick(restaurant.restaurantName)}
+                >
+                  <CardContent className="p-3 min-h-[90px] relative">
+                    {/* 하트 아이콘 - 오른쪽 상단 */}
+                    <div className="absolute top-3 right-3"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(restaurant.restaurantId);
+                    }}>
+                      <Image
+                        src={
+                          favoriteStates[restaurant.restaurantId]
+                            ? "/icons/heart-filled.svg"
+                            : "/icons/heart-unfilled.svg"
+                        }
+                        alt="Heart"
+                        width={20}
+                        height={18}
+                        className="w-5 h-[18px] cursor-pointe"
+                      />
+                    </div>
+
+                    {/* 메인 콘텐츠 */}
+                    <div className="pr-8">
+                      {/* 음식점 이름과 별점 */}
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-[13.2px] font-medium text-[#333333] leading-[15.6px]">
+                          {restaurant.restaurantName}
+                        </h3>
+                        <div className="flex items-center gap-1">
+                          <Image
+                            src="/icons/star-filled.svg"
+                            alt="Star"
+                            width={12}
+                            height={12}
+                            className="w-3 h-3"
+                          />
+                          <span className="text-[13.2px] font-medium text-[#333333] leading-[15.6px]">
+                            {restaurant.rating.toFixed(1)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 주소 */}
+                      <div className="flex items-center gap-1 mb-2">
+                        <Image
+                          src="/icons/location-pin.svg"
+                          alt="Location"
+                          width={7}
+                          height={10}
+                          className="w-[7px] h-[10px]"
+                        />
+                        <span className="text-[9.6px] font-normal text-[#BCBCBC] leading-[10.8px]">
+                          {restaurant.restaurantAddress}
+                        </span>
+                      </div>
+
+                      {/* 방문 정보 */}
+                      <div className="space-y-1">
+                        <div className="text-[10.8px] font-normal text-[#666666] leading-[13.2px]">
+                          방문 횟수 : {restaurant.visitCount}회
+                        </div>
+                        <div className="text-[10.8px] font-normal text-[#666666] leading-[13.2px]">
+                          최근 방문 : {restaurant.lastVisit}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
             )}
           </>
         )}
@@ -756,6 +778,38 @@ export default function HomePage() {
         onShare={(title, content) => {
           setReviewDetailModal({ isOpen: false, review: null });
           setShareModal({ isOpen: true, title, content });
+        }}
+        onFavoriteToggle={async (restaurantId: string, shouldBeFavorited: boolean) => {
+          try {
+            console.log(`즐겨찾기 토글: ${restaurantId}, shouldBeFavorited: ${shouldBeFavorited}`);
+            if (shouldBeFavorited) {
+              // 즐겨찾기에 추가
+              await addFavorite(restaurantId);
+              console.log('즐겨찾기 추가 완료');
+            } else {
+              // 즐겨찾기에서 제거
+              await removeFavorite(restaurantId);
+              console.log('즐겨찾기 제거 완료');
+            }
+            // 즐겨찾기 목록 새로고침
+            await fetchFavoriteRestaurants();
+          } catch (error) {
+            console.error("즐겨찾기 토글 실패:", error);
+            throw error;
+          }
+        }}
+        onDelete={async (reviewId: string) => {
+          try {
+            console.log('리뷰 삭제 시작:', reviewId);
+            await deleteReview(reviewId);
+            console.log('리뷰 삭제 완료');
+            // 리뷰 목록 새로고침
+            await fetchMyReviews();
+            await fetchFavoriteRestaurants();
+          } catch (error) {
+            console.error("리뷰 삭제 실패:", error);
+            throw error;
+          }
         }}
         className="z-[60]"
       />

@@ -1,31 +1,11 @@
 {
-    "storeName": "농협",
-    "address": "경기 의정부시",
+    "storeName": "페이히어 카페",
+    "address": "서울특별시 강남구 강남대로374 16층",
     "menuItems": [
         {
-            "name": "굿모닝우유",
-            "price": 1350
-        },
-        {
-            "name": "양파",
-            "price": 3300
-        },
-        {
-            "name": "무",
-            "price": 500
-        },
-        {
-            "name": "깻잎",
-            "price": 750
-        },
-        {
-            "name": "하선정 바로먹기좋은장(까찌)",
-            "price": 1380
-        },
-        {
-            "name": "브로커리",
-            "price": 1280
+            "name": "Americano",
+            "price": 5000
         }
     ],
-    "totalPrice": 8560
+    "totalPrice": 5000
 }
