@@ -39,7 +39,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/yoriview?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=UTF-8
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=try1234
-      - JWT_SECRET=your_production_jwt_secret_key
+      - JWT_SECRET=your_production_jwt_secret_key_key_key_key
     depends_on:
       mysql:
         condition: service_healthy
