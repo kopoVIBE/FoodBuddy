@@ -80,18 +80,8 @@ export default function SettingsPage() {
             </div>
 
         {/* 앱 설정 */}
-        <Card className={isDarkMode ? "bg-gray-800 border-gray-700" : ""}>
-          <CardHeader>
-            <CardTitle
-              className={`flex items-center gap-2 text-sm font-semibold ${
-                isDarkMode ? "text-white" : ""
-              }`}
-            >
-              <Palette className="h-5 w-5" />
-              앱 설정
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <Card className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]">
+          <CardContent>
             <div className="flex items-center justify-between">
               <div>
                 <Label className={isDarkMode ? "text-white" : ""}>

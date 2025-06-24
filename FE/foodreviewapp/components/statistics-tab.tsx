@@ -235,14 +235,14 @@ export default function StatisticsTab() {
         </div>
 
         {/* 총 리뷰 수 - 흰색 배경 */}
-        <div className="w-[164px] h-[71px] bg-white border border-[#EB4C34] rounded-[10px] relative">
+        <div className="w-[164px] h-[71px] bg-[#EB4C34] border border-[#EB4C34] rounded-[10px] relative">
           <div className="absolute w-[62px] h-[25.82px] left-1/2 top-[12.52px] transform -translate-x-1/2">
-            <div className="font-bold text-2xl leading-7 text-center text-[#EB4C34]">
+            <div className="font-bold text-2xl leading-7 text-center text-white">
               {totalReviews}
             </div>
           </div>
           <div className="absolute w-[46px] h-[15px] left-1/2 top-[43px] transform -translate-x-1/2">
-            <div className="font-normal text-[11px] leading-[13px] text-center text-[#333333]">
+            <div className="font-normal text-[11px] leading-[13px] text-center text-white">
               총 리뷰 수
             </div>
           </div>
@@ -251,9 +251,7 @@ export default function StatisticsTab() {
 
       {/* 이번 달 활동 */}
       <Card
-        className={`border-0 shadow-none ${
-          isDarkMode ? "bg-gray-800" : "bg-white"
-        }`}
+        className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]"
       >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -283,9 +281,7 @@ export default function StatisticsTab() {
 
       {/* 선호하는 음식 - 파이 차트 */}
       <Card
-        className={`border-0 shadow-none ${
-          isDarkMode ? "bg-gray-800" : "bg-white"
-        }`}
+        className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]"
       >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -363,9 +359,7 @@ export default function StatisticsTab() {
 
       {/* 월별 리뷰 트렌드 - 라인 차트 */}
       <Card
-        className={`border-0 shadow-none ${
-          isDarkMode ? "bg-gray-800" : "bg-white"
-        }`}
+        className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]"
       >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -430,9 +424,7 @@ export default function StatisticsTab() {
 
       {/* 평점 분포 - 바 차트 */}
       <Card
-        className={`border-0 shadow-none ${
-          isDarkMode ? "bg-gray-800" : "bg-white"
-        }`}
+        className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]"
       >
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -502,7 +494,7 @@ export default function StatisticsTab() {
                 isDarkMode ? "text-white" : "text-gray-900"
               }`}
             >
-              자주 방문한 음식점
+              버디의 랭킹
             </h3>
           </div>
 
