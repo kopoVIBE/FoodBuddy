@@ -196,6 +196,7 @@ ${toneInstruction}
 - 메뉴의 맛, 가격, 서비스에 대한 언급 포함
 - 정확히 150자 이내로 작성 (마지막 문장이 잘리지 않도록 주의)
 - 자연스럽고 진정성 있는 표현 사용
+- 끝까지 일관된 존댓말 사용
 ${
   data.additionalKeywords
     ? `- 다음 키워드를 자연스럽게 포함: ${data.additionalKeywords}`
