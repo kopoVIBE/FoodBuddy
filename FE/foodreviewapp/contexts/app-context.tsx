@@ -84,7 +84,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const savedDarkMode = localStorage.getItem("darkMode") === "true";
       const savedLanguage = localStorage.getItem("language") || "ko";
       const savedNickname = localStorage.getItem("nickname");
-      const authToken = localStorage.getItem("authToken");
+      const authToken = localStorage.getItem("accessToken"); // 키 이름 일치시키기
 
       setIsDarkMode(savedDarkMode);
       setLanguageState(savedLanguage);
@@ -119,7 +119,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNickname(userNickname);
     setIsAuthenticated(true);
     localStorage.setItem("nickname", userNickname);
-    localStorage.setItem("authToken", token);
+    localStorage.setItem("accessToken", token); // API 요청과 일치하도록 변경
   };
 
   // 로그아웃
@@ -127,7 +127,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNickname(null);
     setIsAuthenticated(false);
     localStorage.removeItem("nickname");
-    localStorage.removeItem("authToken");
+    localStorage.removeItem("accessToken"); // 키 이름 일치시키기
     localStorage.removeItem("hasShownSplash"); // 스플래시도 초기화
   };
 

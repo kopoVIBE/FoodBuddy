@@ -13,7 +13,7 @@ import lombok.*;
 public class Location {
 
     @Id
-    @Column(name = "location_id", length = 10)
+    @Column(name = "location_id", length = 200)
     private String locationId;
 
     @Column(name = "name", nullable = false, length = 50)

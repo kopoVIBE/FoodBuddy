@@ -229,4 +229,40 @@ ${toneInstruction}
   }
 };
 
+// 통합 리뷰 저장 API
+export interface CompleteReviewRequest {
+  // OCR 정보
+  ocrRestaurantName: string;
+  ocrAddress?: string;
+  originalImg?: string;
+  receiptDate?: string;
+  ocrMenuItems: Array<{ name: string; price: number; quantity?: number }>;
+
+  // 식당 정보
+  restaurantName: string;
+  restaurantCategory?: string;
+  restaurantAddress: string;
+  locationId?: string;
+
+  // 리뷰 정보
+  styleId: string;
+  reviewContent: string;
+  rating: number;
+}
+
+export interface CompleteReviewResponse {
+  success: boolean;
+  reviewId: string;
+  receiptId: string;
+  restaurantId: string;
+  message: string;
+}
+
+export const saveCompleteReview = async (
+  data: CompleteReviewRequest
+): Promise<CompleteReviewResponse> => {
+  const response = await axiosInstance.post("/api/reviews/complete", data);
+  return response.data;
+};
+
 export default axiosInstance;

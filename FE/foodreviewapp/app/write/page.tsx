@@ -16,6 +16,8 @@ import {
   OCRResult,
   generateReview,
   ReviewGenerationRequest,
+  saveCompleteReview,
+  CompleteReviewRequest,
 } from "@/lib/api";
 
 const toneOptions = [
@@ -193,9 +195,78 @@ export default function WritePage() {
     alert("리뷰가 클립보드에 복사되었습니다!");
   };
 
-  const saveReview = () => {
-    // 리뷰 저장 로직
-    alert("리뷰가 저장되었습니다!");
+  const saveReview = async () => {
+    if (!ocrResult || !selectedTone || !generatedReview) {
+      alert("리뷰 저장에 필요한 정보가 부족합니다.");
+      return;
+    }
+
+    try {
+      // OCR 메뉴 항목을 API 형식에 맞게 변환
+      const ocrMenuItems = ocrResult.items.map((item) => ({
+        name: item.name,
+        price: item.price,
+        quantity: 1, // 기본값
+      }));
+
+      // 통합 리뷰 저장 요청 데이터 구성
+      const reviewData: CompleteReviewRequest = {
+        // OCR 정보
+        ocrRestaurantName: ocrResult.restaurantName,
+        ocrAddress: ocrResult.address || "",
+        originalImg: uploadedImage || "", // base64 이미지 데이터 저장 (TEXT 컬럼으로 변경됨)
+        receiptDate: new Date().toISOString().split("T")[0], // 오늘 날짜를 임시로 사용
+        ocrMenuItems: ocrMenuItems,
+
+        // 식당 정보 (OCR 정보를 기본값으로 사용)
+        restaurantName: ocrResult.restaurantName,
+        restaurantCategory: "일반음식점", // 기본값
+        restaurantAddress: ocrResult.address || "",
+        locationId: "SEOUL", // 기본값 (10자 이내로 변경)
+
+        // 리뷰 정보
+        styleId: selectedTone,
+        reviewContent: generatedReview,
+        rating: 4.0, // 기본값 (나중에 사용자 입력으로 변경 가능)
+      };
+
+      console.log("리뷰 저장 요청:", reviewData);
+
+      // API 호출
+      const response = await saveCompleteReview(reviewData);
+
+      if (response.success) {
+        alert(
+          `리뷰가 성공적으로 저장되었습니다!\n리뷰 ID: ${response.reviewId}`
+        );
+
+        // 저장 성공 후 초기화 (선택사항)
+        setShowGeneratedReview(false);
+        setGeneratedReview("");
+        setUploadedImage(null);
+        setOcrResult(null);
+        setSelectedTone("");
+        setOcrCompleted(false);
+        setAdditionalWords("");
+
+        console.log("저장된 리뷰 정보:", response);
+      } else {
+        alert("리뷰 저장에 실패했습니다: " + response.message);
+      }
+    } catch (error: any) {
+      console.error("리뷰 저장 중 오류:", error);
+
+      let errorMessage = "리뷰 저장 중 오류가 발생했습니다.";
+      if (error.response?.status === 401) {
+        errorMessage = "로그인이 필요합니다.";
+      } else if (error.response?.status === 400) {
+        errorMessage = "잘못된 요청입니다. 입력 정보를 확인해주세요.";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      alert(errorMessage);
+    }
   };
 
   return (
