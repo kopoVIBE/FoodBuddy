@@ -278,4 +278,74 @@ export const changePassword = async (
   return response.data;
 };
 
+// 통합 리뷰 저장 관련 타입 정의
+export interface CompleteReviewRequest {
+  // OCR 정보
+  ocrRestaurantName: string;
+  ocrAddress: string;
+  originalImg: string;
+  receiptDate: string;
+  ocrMenuItems: Array<{
+    name: string;
+    price: number;
+    quantity: number;
+  }>;
+  
+  // 식당 정보
+  restaurantName: string;
+  restaurantCategory: string;
+  restaurantAddress: string;
+  locationId: string;
+  
+  // 리뷰 정보
+  styleId: string;
+  reviewContent: string;
+  rating: number;
+}
+
+export interface CompleteReviewResponse {
+  success: boolean;
+  reviewId: string;
+  receiptId: string;
+  restaurantId: string;
+  message: string;
+}
+
+// 통합 리뷰 저장 API
+export const saveCompleteReview = async (data: CompleteReviewRequest): Promise<CompleteReviewResponse> => {
+  const response = await axiosInstance.post("/api/reviews/complete", data);
+  return response.data;
+};
+
+// 리뷰 관련 타입 정의
+export interface MyReviewResponse {
+  reviewId: string;
+  userId: string;
+  receiptId: string;
+  styleId: string;
+  restaurantId: string;
+  locationId: string;
+  content: string;
+  rating: number;
+  createdAt: string;
+  // 조인된 정보들
+  restaurantName: string;
+  restaurantAddress: string;
+  restaurantCategory: string;
+  originalImg: string; // 영수증 이미지 Base64
+  receiptDate: string;
+}
+
+// 사용자 상세 리뷰 목록 조회 API
+export const getMyDetailedReviews = async (order: string = "latest"): Promise<MyReviewResponse[]> => {
+  const response = await axiosInstance.get(`/api/reviews/me/detailed?order=${order}`);
+  return response.data;
+};
+
+// 사용자 리뷰 목록 조회 API (기존)
+export const getMyReviews = async (order: string = "latest"): Promise<MyReviewResponse[]> => {
+  const response = await axiosInstance.get(`/api/reviews/me?order=${order}`);
+  return response.data;
+};
+
 export default axiosInstance;

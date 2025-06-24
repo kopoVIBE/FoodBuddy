@@ -23,7 +23,7 @@ public class OcrController {
     private final ObjectMapper objectMapper = new ObjectMapper();
     
     // OCR 입력/출력 디렉토리 경로
-    private final String OCR_BASE_PATH = System.getProperty("user.dir") + "/BE/yoriview/ocr";
+    private final String OCR_BASE_PATH = System.getProperty("user.dir") + "/ocr";
     private final String INPUT_DIR = OCR_BASE_PATH + "/input";
     private final String OUTPUT_DIR = OCR_BASE_PATH + "/output";
     private final String PYTHON_SCRIPT_PATH = OCR_BASE_PATH + "/ocr-parser.py";
@@ -113,11 +113,19 @@ public class OcrController {
 
     private ProcessResult executePythonScript() {
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder("python", "ocr-parser.py");
+            // 절대 경로 사용
+            File scriptFile = new File(PYTHON_SCRIPT_PATH);
+            if (!scriptFile.exists()) {
+                log.error("Python 스크립트 파일을 찾을 수 없습니다: {}", PYTHON_SCRIPT_PATH);
+                return new ProcessResult(false, "Python 스크립트 파일을 찾을 수 없습니다", "");
+            }
+
+            ProcessBuilder processBuilder = new ProcessBuilder("python3", PYTHON_SCRIPT_PATH);
             processBuilder.directory(new File(OCR_BASE_PATH));
             processBuilder.redirectErrorStream(true);
             
             log.info("Python 스크립트 실행 시작: {}", PYTHON_SCRIPT_PATH);
+            log.info("작업 디렉토리: {}", OCR_BASE_PATH);
             
             Process process = processBuilder.start();
             
@@ -142,12 +150,12 @@ public class OcrController {
             int exitCode = process.exitValue();
             String outputStr = output.toString();
             
-            log.info("Python 스크립트 완료: exitCode={}", exitCode);
+            log.info("Python 스크립트 완료: exitCode={}, output={}", exitCode, outputStr);
             
             if (exitCode == 0) {
                 return new ProcessResult(true, "", outputStr);
             } else {
-                return new ProcessResult(false, "Python 스크립트 실행 오류 (exit code: " + exitCode + ")", outputStr);
+                return new ProcessResult(false, "Python 스크립트 실행 오류 (exit code: " + exitCode + "): " + outputStr, outputStr);
             }
             
         } catch (Exception e) {

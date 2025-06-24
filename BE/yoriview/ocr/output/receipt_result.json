@@ -1,23 +1,11 @@
 {
-    "storeName": "용용선생 영등포역점",
-    "address": "서울특별시 영등포구 영중로4길 9-2 (영등포동3가) 1층",
+    "storeName": "페이히어 카페",
+    "address": "서울특별시 강남구 강남대로374 16층",
     "menuItems": [
         {
-            "name": "3인세트",
-            "price": 64900
-        },
-        {
-            "name": "진로이즈백",
-            "price": 12000
-        },
-        {
-            "name": "앞치마",
-            "price": 0
-        },
-        {
-            "name": "물",
-            "price": 0
+            "name": "Americano",
+            "price": 5000
         }
     ],
-    "totalPrice": 76900
+    "totalPrice": 5000
 }

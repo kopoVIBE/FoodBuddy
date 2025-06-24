@@ -4,15 +4,14 @@ import com.vibe.yoriview.domain.review.dto.CompleteReviewRequestDto;
 import com.vibe.yoriview.domain.review.dto.CompleteReviewResponseDto;
 import com.vibe.yoriview.domain.review.dto.ReviewRequestDto;
 import com.vibe.yoriview.domain.review.dto.ReviewResponseDto;
+import com.vibe.yoriview.domain.review.dto.MyReviewResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reviews")
@@ -67,6 +66,15 @@ public class ReviewController {
         return reviewService.findByUserId(userId, order);
     }
 
+    // 로그인한 사용자의 상세 리뷰 조회
+    @GetMapping("/me/detailed")
+    public List<MyReviewResponseDto> getMyDetailedReviews(
+            @RequestParam(defaultValue = "latest") String order
+    ) {
+        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return reviewService.getMyReviews(userId, order);
+    }
+
     // 통합 리뷰 저장 (OCR + 식당 + 리뷰 + 스타일)
     @PostMapping("/complete")
     public ResponseEntity<CompleteReviewResponseDto> saveCompleteReview(@Valid @RequestBody CompleteReviewRequestDto dto) {
@@ -74,5 +82,4 @@ public class ReviewController {
         CompleteReviewResponseDto response = completeReviewService.saveCompleteReview(dto, userId);
         return ResponseEntity.ok(response);
     }
-
 }
