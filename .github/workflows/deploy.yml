@@ -18,6 +18,7 @@ env:
   EC2_HOST: ${{ secrets.EC2_HOST }}
   EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
   EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+  NEXT_PUBLIC_LOCAL_BACK_URL: ${{ secrets.NEXT_PUBLIC_LOCAL_BACK_URL }}
 
 permissions:
   contents: read
@@ -27,6 +28,8 @@ jobs:
   build-frontend:
     name: 🎨 프론트엔드 빌드
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_LOCAL_BACK_URL: ${{ secrets.NEXT_PUBLIC_LOCAL_BACK_URL }}
     steps:
       - name: 🧹 디스크 공간 확보
         run: |
@@ -60,7 +63,9 @@ jobs:
         run: |
           echo "🏗️ 프론트엔드 빌드 시작: $(date)"
           echo "📦 도커 이미지 태그: $IMAGE_TAG"
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG . 2>&1 | tee frontend_build.log
+          docker build \
+            --build-arg NEXT_PUBLIC_LOCAL_BACK_URL=${{ secrets.NEXT_PUBLIC_LOCAL_BACK_URL }} \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG . 2>&1 | tee frontend_build.log
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG
           echo "✅ 프론트엔드 빌드 완료: $(date)"
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:$IMAGE_TAG"
