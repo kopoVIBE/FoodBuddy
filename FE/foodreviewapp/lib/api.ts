@@ -555,4 +555,31 @@ export const getCoordinatesFromAddress = async (
   }
 };
 
+// 통계 관련 타입 정의
+export interface UserStatisticsResponse {
+  totalReviewCount: number;
+  avgRating: number;
+  thisMonthReviewCount: number;
+  monthlyReviewCount: { [key: string]: number };
+  ratingDistribution: { [key: string]: number };
+  categoryDistribution: { [key: string]: number };
+  topVisitedRestaurants: Array<{
+    name: string;
+    category: string;
+    visitCount: number;
+  }>;
+}
+
+// 사용자 통계 조회 API
+export const getUserStatistics = async (): Promise<UserStatisticsResponse> => {
+  try {
+    const response = await axiosInstance.get("/api/statistics/me");
+    console.log("통계 API 응답:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("통계 API 호출 실패:", error);
+    throw error;
+  }
+};
+
 export default axiosInstance;
