@@ -57,8 +57,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = Path(os.getcwd())
 print("현재 작업 디렉토리:", PROJECT_ROOT)
 
-# OCR 디렉토리 경로 설정
-OCR_DIR = PROJECT_ROOT / 'ocr'
+# OCR 디렉토리 경로 설정 (Java에서 설정한 작업 디렉토리가 이미 /app/ocr)
+OCR_DIR = PROJECT_ROOT  # 작업 디렉토리 자체가 OCR 디렉토리
 print("OCR 디렉토리:", OCR_DIR)
 
 # --- .env 파일에서 환경 변수 불러오기 ---
