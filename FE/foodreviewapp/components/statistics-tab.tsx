@@ -22,16 +22,23 @@ import {
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { getUserStatistics, UserStatisticsResponse } from "@/lib/api";
-
+import { useTheme } from "next-themes";
 // 색상 정의
 const BASE_COLOR = "#EB4C34";
 const OPACITY_LEVELS = ["FF", "CC", "99", "66", "33"]; // 100%, 80%, 60%, 40%, 20%
 
 export default function StatisticsTab() {
-  const { isDarkMode } = useApp();
-  const [statistics, setStatistics] = useState<UserStatisticsResponse | null>(
-    null
-  );
+  const { theme, setTheme } = useTheme();
+  const isDarkMode = theme === "dark";
+  const [statistics, setStatistics] = useState<UserStatisticsResponse>({
+    totalReviewCount: 0,
+    avgRating: 0,
+    thisMonthReviewCount: 0,
+    categoryDistribution: {},
+    monthlyReviewCount: {},
+    ratingDistribution: {},
+    topVisitedRestaurants: [],
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [activeTooltip, setActiveTooltip] = useState<{
     x: number;
@@ -71,22 +78,8 @@ export default function StatisticsTab() {
     );
   }
 
-  // 카테고리 데이터 변환
-  const categoryData = Object.entries(statistics.categoryDistribution)
-    .map(([name, count]) => ({
-      name,
-      count,
-    }))
-    .sort((a, b) => b.count - a.count) // 비중이 높은 순으로 정렬
-    .map((item, index) => ({
-      ...item,
-      color: `${BASE_COLOR}${
-        OPACITY_LEVELS[index] || OPACITY_LEVELS[OPACITY_LEVELS.length - 1]
-      }`,
-    }));
-
   // 월별 데이터 변환 (최근 5개월)
-  const monthlyData = Object.entries(statistics.monthlyReviewCount)
+  const monthlyData = Object.entries(statistics.monthlyReviewCount || {})
     .map(([yearMonth, count]) => {
       const [year, month] = yearMonth.split("-");
       return {
@@ -99,12 +92,26 @@ export default function StatisticsTab() {
     .slice(-5);
 
   // 평점 분포 데이터 변환
-  const ratingData = Object.entries(statistics.ratingDistribution)
+  const ratingData = Object.entries(statistics.ratingDistribution || {})
     .map(([rating, count]) => ({
       rating: `${rating}점`,
       count,
     }))
-    .sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+    .sort((a, b) => parseFloat(a.rating) - parseFloat(b.rating));
+
+  // 카테고리 데이터 변환
+  const categoryData = Object.entries(statistics.categoryDistribution || {})
+    .map(([name, count]) => ({
+      name,
+      count,
+    }))
+    .sort((a, b) => b.count - a.count)
+    .map((item, index) => ({
+      ...item,
+      color: `${BASE_COLOR}${
+        OPACITY_LEVELS[index] || OPACITY_LEVELS[OPACITY_LEVELS.length - 1]
+      }`,
+    }));
 
   // 전체 카운트 계산
   const totalCount = categoryData.reduce((sum, item) => sum + item.count, 0);
@@ -179,7 +186,7 @@ export default function StatisticsTab() {
         content = `${data.month}: ${data.reviews}개 리뷰`;
         break;
       case "rating":
-        content = `${data.rating}점: ${data.count}개 (${(
+        content = `${data.rating}: ${data.count}개 (${(
           (data.count / statistics.totalReviewCount) *
           100
         ).toFixed(1)}%)`;
@@ -269,7 +276,6 @@ export default function StatisticsTab() {
             <LineChart
               data={monthlyData}
               margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
-              onClick={onMonthlyClick}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -293,6 +299,20 @@ export default function StatisticsTab() {
                 tickLine={false}
                 width={20}
               />
+              <Tooltip
+                cursor={{ stroke: "#EB4C34", strokeWidth: 1 }}
+                content={({ active, payload }) => {
+                  if (!active || !payload || !payload[0]) return null;
+                  const data = payload[0].payload;
+                  return (
+                    <div className="bg-white p-2 border border-gray-200 rounded shadow">
+                      <p className="text-sm font-medium">
+                        {data.month}: {data.reviews}개 리뷰
+                      </p>
+                    </div>
+                  );
+                }}
+              />
               <Line
                 type="monotone"
                 dataKey="reviews"
@@ -302,13 +322,11 @@ export default function StatisticsTab() {
                   fill: "#EB4C34",
                   strokeWidth: 2,
                   r: 3,
-                  cursor: "pointer",
                 }}
                 activeDot={{
                   fill: "#EB4C34",
                   strokeWidth: 2,
                   r: 4,
-                  cursor: "pointer",
                 }}
                 animationDuration={1000}
               />
@@ -338,7 +356,6 @@ export default function StatisticsTab() {
             <BarChart
               data={ratingData}
               margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
-              onClick={onRatingClick}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -362,12 +379,30 @@ export default function StatisticsTab() {
                 tickLine={false}
                 width={20}
               />
+              <Tooltip
+                cursor={{ fill: "rgba(235, 76, 52, 0.1)" }}
+                content={({ active, payload }) => {
+                  if (!active || !payload || !payload[0]) return null;
+                  const data = payload[0].payload;
+                  return (
+                    <div className="bg-white p-2 border border-gray-200 rounded shadow">
+                      <p className="text-sm font-medium">
+                        {data.rating}: {data.count}개 (
+                        {(
+                          (data.count / statistics.totalReviewCount) *
+                          100
+                        ).toFixed(1)}
+                        %)
+                      </p>
+                    </div>
+                  );
+                }}
+              />
               <Bar
                 dataKey="count"
                 fill="#EB4C34"
                 radius={[2, 2, 0, 0]}
                 animationDuration={800}
-                cursor="pointer"
               />
             </BarChart>
           )}
@@ -424,34 +459,26 @@ export default function StatisticsTab() {
       </div>
       <Separator className={isDarkMode ? "bg-gray-700" : ""} />
 
-      {/* 요약 통계 카드들 */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* 평균 평점 */}
-        <div className="w-[164px] h-[71px] bg-[#EB4C34] border border-[#EB4C34] rounded-[10px] relative">
-          <div className="absolute w-[62px] h-[25.82px] left-1/2 top-[12.52px] transform -translate-x-1/2">
-            <div className="font-bold text-2xl leading-7 text-center text-white">
-              {statistics.avgRating.toFixed(1)}
-            </div>
-          </div>
-          <div className="absolute w-[80px] h-[15px] left-1/2 top-[43px] transform -translate-x-1/2">
-            <div className="font-normal text-[11px] leading-[13px] text-center text-white">
-              평균 평점
-            </div>
-          </div>
+      {/* 상단 통계 블록 */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 flex flex-col items-center justify-center shadow-sm">
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">
+            평균 평점
+          </p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+            {statistics.avgRating.toFixed(1)}
+            <span className="text-yellow-400 ml-1">
+              <Star className="w-6 h-6" />
+            </span>
+          </p>
         </div>
-
-        {/* 총 리뷰 수 */}
-        <div className="w-[164px] h-[71px] bg-[#EB4C34] border border-[#EB4C34] rounded-[10px] relative">
-          <div className="absolute w-[62px] h-[25.82px] left-1/2 top-[12.52px] transform -translate-x-1/2">
-            <div className="font-bold text-2xl leading-7 text-center text-white">
-              {statistics.totalReviewCount}
-            </div>
-          </div>
-          <div className="absolute w-[80px] h-[15px] left-1/2 top-[43px] transform -translate-x-1/2">
-            <div className="font-normal text-[11px] leading-[13px] text-center text-white">
-              총 리뷰 수
-            </div>
-          </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 flex flex-col items-center justify-center shadow-sm">
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">
+            총 리뷰 수
+          </p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            {statistics.totalReviewCount}개
+          </p>
         </div>
       </div>
 
@@ -531,39 +558,21 @@ export default function StatisticsTab() {
         </CardContent>
       </Card>
 
-      {/* 월별 리뷰 트렌드 - 라인 차트 */}
-      <Card className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Calendar className="h-4 w-4 text-[#EB4C34]" />
-            <h3
-              className={`text-sm font-medium ${
-                isDarkMode ? "text-white" : "text-gray-900"
-              }`}
-            >
-              월별 리뷰 트렌드
-            </h3>
-          </div>
-          {renderLineChart()}
-        </CardContent>
-      </Card>
+      {/* 월별 리뷰 차트 */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-4 shadow-sm">
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+          월별 리뷰
+        </h3>
+        {renderLineChart()}
+      </div>
 
-      {/* 평점 분포 - 바 차트 */}
-      <Card className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Star className="h-4 w-4 text-[#EB4C34]" />
-            <h3
-              className={`text-sm font-medium ${
-                isDarkMode ? "text-white" : "text-gray-900"
-              }`}
-            >
-              평점 분포
-            </h3>
-          </div>
-          {renderBarChart()}
-        </CardContent>
-      </Card>
+      {/* 평점 분포 차트 */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-4 shadow-sm">
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+          평점 분포
+        </h3>
+        {renderBarChart()}
+      </div>
 
       {/* 자주 방문한 음식점 */}
       <Card
