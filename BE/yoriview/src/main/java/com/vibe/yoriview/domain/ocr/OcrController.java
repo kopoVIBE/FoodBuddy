@@ -22,11 +22,35 @@ public class OcrController {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     
-    // OCR 입력/출력 디렉토리 경로
-    private final String OCR_BASE_PATH = System.getProperty("user.dir") + "/ocr";
+    // OCR 입력/출력 디렉토리 경로를 동적으로 찾기
+    private final String OCR_BASE_PATH = findOcrBasePath();
     private final String INPUT_DIR = OCR_BASE_PATH + "/input";
     private final String OUTPUT_DIR = OCR_BASE_PATH + "/output";
     private final String PYTHON_SCRIPT_PATH = OCR_BASE_PATH + "/ocr-parser.py";
+
+    /**
+     * OCR 기본 경로를 찾는 메소드
+     * 여러 가능한 경로를 체크하여 Python 스크립트가 있는 경로를 반환
+     */
+    private String findOcrBasePath() {
+        String userDir = System.getProperty("user.dir");
+        String[] possiblePaths = {
+            userDir + "/BE/yoriview/ocr",  // Spring Boot jar 실행 시 (EC2)
+            userDir + "/ocr"               // 로컬 개발 시
+        };
+        
+        for (String path : possiblePaths) {
+            File scriptFile = new File(path + "/ocr-parser.py");
+            if (scriptFile.exists()) {
+                log.info("OCR 스크립트 경로 찾음: {}", path);
+                return path;
+            }
+        }
+        
+        // 기본값으로 BE/yoriview/ocr 반환
+        log.warn("OCR 스크립트를 찾을 수 없음. 기본 경로 사용: {}", userDir + "/BE/yoriview/ocr");
+        return userDir + "/BE/yoriview/ocr";
+    }
 
     @RequestMapping(value = "/process", method = RequestMethod.OPTIONS)
     public ResponseEntity<?> handleOptions() {
@@ -120,11 +144,32 @@ public class OcrController {
                 return new ProcessResult(false, "Python 스크립트 파일을 찾을 수 없습니다", "");
             }
 
-            ProcessBuilder processBuilder = new ProcessBuilder("python3", PYTHON_SCRIPT_PATH);
+            // Python 실행 명령어 시도 순서 (환경에 따라 다를 수 있음)
+            String[] pythonCommands = {"python3", "python", "/usr/bin/python3", "/usr/local/bin/python3"};
+            
+            for (String pythonCmd : pythonCommands) {
+                ProcessResult result = tryExecutePython(pythonCmd, scriptFile);
+                if (result.isSuccess()) {
+                    return result;
+                }
+                log.warn("Python 실행 실패 ({}): {}", pythonCmd, result.getErrorMessage());
+            }
+            
+            return new ProcessResult(false, "모든 Python 명령어 시도 실패", "");
+            
+        } catch (Exception e) {
+            log.error("Python 스크립트 실행 중 예외 발생", e);
+            return new ProcessResult(false, "Python 스크립트 실행 예외: " + e.getMessage(), "");
+        }
+    }
+    
+    private ProcessResult tryExecutePython(String pythonCommand, File scriptFile) {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder(pythonCommand, scriptFile.getAbsolutePath());
             processBuilder.directory(new File(OCR_BASE_PATH));
             processBuilder.redirectErrorStream(true);
             
-            log.info("Python 스크립트 실행 시작: {}", PYTHON_SCRIPT_PATH);
+            log.info("Python 스크립트 실행 시도: {} {}", pythonCommand, scriptFile.getAbsolutePath());
             log.info("작업 디렉토리: {}", OCR_BASE_PATH);
             
             Process process = processBuilder.start();
@@ -159,8 +204,7 @@ public class OcrController {
             }
             
         } catch (Exception e) {
-            log.error("Python 스크립트 실행 중 예외 발생", e);
-            return new ProcessResult(false, "Python 스크립트 실행 예외: " + e.getMessage(), "");
+            return new ProcessResult(false, "Python 명령어 실행 실패: " + e.getMessage(), "");
         }
     }
 
