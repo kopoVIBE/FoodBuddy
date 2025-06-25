@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { User, Bell, Palette, Lock } from "lucide-react";
+import { User, Bell, Palette, Lock, FileText, Copyright } from 'lucide-react';
 import { useApp } from "@/contexts/app-context";
 import NicknameEditModal from "@/components/nickname-edit-modal";
 import PasswordChangeModal from "@/components/password-change-modal";
@@ -132,21 +132,53 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <Label className={isDarkMode ? "text-white" : ""}>
-                  다크 모드
+                  이용약관
                 </Label>
                 <p
                   className={`text-sm ${
                     isDarkMode ? "text-gray-300" : "text-gray-600"
                   }`}
                 >
-                  어두운 테마 사용
+                  서비스 이용약관 확인
                 </p>
               </div>
-              <Switch
-                checked={isDarkMode}
-                onCheckedChange={toggleDarkMode}
-                className="data-[state=checked]:bg-[#EB4C34]"
-              />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  window.open('https://invented-screw-e79.notion.site/21d2dcca973780e68489c1f0232d2e0e?source=copy_link', '_blank');
+                }}                
+                className="text-[#EB4C34] hover:bg-[#EB4C34]/10"
+              >
+                보기
+              </Button>
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className={isDarkMode ? "text-white" : ""}>
+                  개인정보처리방침
+                </Label>
+                <p
+                  className={`text-sm ${
+                    isDarkMode ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  개인정보 처리방침 확인
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  window.open('https://invented-screw-e79.notion.site/21d2dcca973780e68489c1f0232d2e0e?source=copy_link', '_blank');
+                }}                
+                className="text-[#EB4C34] hover:bg-[#EB4C34]/10"
+              >
+                보기
+              </Button>
             </div>
 
             <Separator />
@@ -197,6 +229,19 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Copyright */}
+      <div className="text-center py-4">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Copyright className="w-4 h-4 text-gray-500" />
+          <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+            2025 FoodReview & Yoriview. All rights reserved.
+          </p>
+        </div>
+        <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
+          Version 1.0.0
+        </p>
       </div>
 
       {/* 닉네임 수정 모달 */}
