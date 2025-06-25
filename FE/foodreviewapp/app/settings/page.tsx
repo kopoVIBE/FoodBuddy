@@ -85,7 +85,7 @@ export default function SettingsPage() {
               </div>
               <div className="flex-1">
                 <h3 className={`font-medium ${isDarkMode ? "text-white" : ""}`}>
-                  {nickname || "게스트"}
+                  {nickname || t("guest")}
                 </h3>
                 <p
                   className={`text-sm ${
@@ -93,12 +93,12 @@ export default function SettingsPage() {
                   }`}
                 >
                   {loading 
-                    ? "로딩 중..." 
+                    ? t("loading") 
                     : userInfo?.email 
                       ? userInfo.email
                       : nickname
-                      ? "이메일 정보를 불러올 수 없습니다"
-                      : "로그인이 필요합니다"
+                      ? t("emailNotAvailable")
+                      : t("loginRequired")
                   }
                 </p>
               </div>
@@ -112,7 +112,7 @@ export default function SettingsPage() {
                 className="w-full justify-start h-[40px] border-[#BCBCBC]"
               >
                 <User className="w-4 h-4 mr-2" />
-                닉네임 변경
+                {t("changeNickname")}
               </Button>
               <Button
                 variant="outline"
@@ -120,7 +120,7 @@ export default function SettingsPage() {
                 className="w-full justify-start h-[40px] border-[#BCBCBC]"
               >
                 <Lock className="w-4 h-4 mr-2" />
-                비밀번호 변경
+                {t("changePassword")}
               </Button>
             </div>
           </CardContent>
@@ -132,14 +132,14 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <Label className={isDarkMode ? "text-white" : ""}>
-                  이용약관
+                  {t("termsOfService")}
                 </Label>
                 <p
                   className={`text-sm ${
                     isDarkMode ? "text-gray-300" : "text-gray-600"
                   }`}
                 >
-                  서비스 이용약관 확인
+                  {t("checkTerms")}
                 </p>
               </div>
               <Button
@@ -150,7 +150,7 @@ export default function SettingsPage() {
                 }}                
                 className="text-[#EB4C34] hover:bg-[#EB4C34]/10"
               >
-                보기
+                {t("view")}
               </Button>
             </div>
 
@@ -159,14 +159,14 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <Label className={isDarkMode ? "text-white" : ""}>
-                  개인정보처리방침
+                  {t("privacyPolicy")}
                 </Label>
                 <p
                   className={`text-sm ${
                     isDarkMode ? "text-gray-300" : "text-gray-600"
                   }`}
                 >
-                  개인정보 처리방침 확인
+                  {t("checkPrivacy")}
                 </p>
               </div>
               <Button
@@ -177,14 +177,14 @@ export default function SettingsPage() {
                 }}                
                 className="text-[#EB4C34] hover:bg-[#EB4C34]/10"
               >
-                보기
+                {t("view")}
               </Button>
             </div>
 
             <Separator />
 
             <div>
-              <Label className={isDarkMode ? "text-white" : ""}>언어</Label>
+              <Label className={isDarkMode ? "text-white" : ""}>{t("language")}</Label>
               <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger
                   className={`mt-1 ${
@@ -200,13 +200,13 @@ export default function SettingsPage() {
                     value="ko"
                     className={isDarkMode ? "text-white hover:bg-gray-600" : ""}
                   >
-                    한국어
+                    {t("korean")}
                   </SelectItem>
                   <SelectItem
                     value="en"
                     className={isDarkMode ? "text-white hover:bg-gray-600" : ""}
                   >
-                    English
+                    {t("english")}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -224,7 +224,7 @@ export default function SettingsPage() {
                 className="w-full text-white font-semibold hover:opacity-90"
                 style={{ backgroundColor: "#EB4C34" }}
               >
-                로그아웃
+                {t("logout")}
               </Button>
             </div>
           </CardContent>
@@ -236,11 +236,11 @@ export default function SettingsPage() {
         <div className="flex items-center justify-center gap-2 mb-2">
           <Copyright className="w-4 h-4 text-gray-500" />
           <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-            2025 FoodReview & Yoriview. All rights reserved.
+            {t("copyright")}
           </p>
         </div>
         <p className={`text-xs ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
-          Version 1.0.0
+          {t("version")}
         </p>
       </div>
 
