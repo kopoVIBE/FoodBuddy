@@ -1,29 +1,29 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { X, Star, MapPin } from "lucide-react"
-import Image from "next/image"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { X, Star, MapPin } from "lucide-react";
+import Image from "next/image";
 
 interface Review {
-  id: number
-  restaurantName: string
-  location: string
-  rating: number
-  date: string
-  content: string
-  image?: string
-  tags: string[]
-  receiptImage?: string
+  id: number;
+  restaurantName: string;
+  location: string;
+  rating: number;
+  date: string;
+  content: string;
+  image?: string;
+  tags: string[];
+  receiptImage?: string;
 }
 
 interface RestaurantReviewsModalProps {
-  isOpen: boolean
-  onClose: () => void
-  restaurantName: string
-  reviews: Review[]
-  className?: string
+  isOpen: boolean;
+  onClose: () => void;
+  restaurantName: string;
+  reviews: Review[];
+  className?: string;
 }
 
 export default function RestaurantReviewsModal({
@@ -33,16 +33,20 @@ export default function RestaurantReviewsModal({
   reviews,
   className = "",
 }: RestaurantReviewsModalProps) {
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
-    <div className={`fixed inset-0 flex items-center justify-center p-4 ${className}`}>
+    <div
+      className={`fixed inset-0 flex items-center justify-center p-4 ${className}`}
+    >
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       <div className="relative w-full max-w-md bg-white rounded-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[85vh] flex flex-col">
         {/* 헤더 */}
         <div className="flex items-center justify-between p-4 bg-white sticky top-0 z-10">
-          <h3 className="text-[18px] text-[#333333] font-semibold">{restaurantName}</h3>
+          <h3 className="text-[18px] text-[#333333] font-semibold">
+            {restaurantName}
+          </h3>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-5 w-5" />
           </Button>
@@ -61,26 +65,38 @@ export default function RestaurantReviewsModal({
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-[14px] h-[14px] ${i < review.rating ? "fill-[#FFDC17] text-[#FFDC17]" : "text-gray-300"}`}
+                          className={`w-[14px] h-[14px] ${
+                            i < review.rating
+                              ? "fill-[#FFDC17] text-[#FFDC17]"
+                              : "text-gray-300"
+                          }`}
                         />
                       ))}
                     </div>
-                    <span className="text-[13px] font-medium text-gray-900">{review.rating}</span>
+                    <span className="text-[13px] font-medium text-gray-900">
+                      {review.rating}
+                    </span>
                   </div>
 
                   {/* 날짜 */}
-                  <span className="text-[10px] text-[#BCBCBC] font-normal">{review.date}</span>
+                  <span className="text-[10px] text-[#BCBCBC] font-normal">
+                    {review.date}
+                  </span>
                 </div>
 
                 {/* 위치 정보 */}
                 <div className="flex items-center gap-1 mb-3">
                   <MapPin className="w-[14px] h-[14px] text-[#BCBCBC]" />
-                  <span className="text-[10px] text-[#BCBCBC] font-normal">{review.location}</span>
+                  <span className="text-[10px] text-[#BCBCBC] font-normal">
+                    {review.location}
+                  </span>
                 </div>
 
                 {/* 리뷰 내용 */}
                 <div className="mb-3">
-                  <p className="text-[14px] leading-5 font-light text-[#333333]">{review.content}</p>
+                  <p className="text-[14px] leading-5 font-light text-[#333333]">
+                    {review.content}
+                  </p>
                 </div>
 
                 {/* 태그 */}
@@ -116,18 +132,20 @@ export default function RestaurantReviewsModal({
 
           {reviews.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-[13px] text-gray-500">아직 작성된 리뷰가 없습니다.</p>
+              <p className="text-[13px] text-gray-500">
+                아직 작성된 리뷰가 없습니다.
+              </p>
             </div>
           )}
         </div>
 
         {/* 하단 버튼 */}
-        <div className="p-4 bg-white mb-4">
+        {/* <div className="p-4 bg-white mb-4">
           <Button className="w-full bg-[#EB4C34] hover:bg-[#d63e2a] text-white rounded-[10px] text-[15px]">
             새 리뷰 작성하기
           </Button>
-        </div>
+        </div> */}
       </div>
     </div>
-  )
+  );
 }

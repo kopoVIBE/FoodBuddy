@@ -260,7 +260,9 @@ export default function StatisticsTab() {
   // 라인 차트 렌더링 함수
   const renderLineChart = () => {
     return (
-      <div className="h-32 relative"> {/* ✅ relative 추가 */}
+      <div className="h-32 relative">
+        {" "}
+        {/* ✅ relative 추가 */}
         <ResponsiveContainer width="100%" height="100%">
           {monthlyData.length === 0 ? (
             <div className="absolute inset-0 flex items-center justify-center z-10 bg-white dark:bg-gray-800 rounded-lg">
@@ -331,16 +333,18 @@ export default function StatisticsTab() {
                 animationDuration={1000}
               />
             </LineChart>
-        )}
-      </ResponsiveContainer>
-    </div>
-  );
-};
+          )}
+        </ResponsiveContainer>
+      </div>
+    );
+  };
 
   // 바 차트 렌더링 함수
   const renderBarChart = () => {
     return (
-      <div className="h-32 relative"> {/* ✅ relative 추가 */}
+      <div className="h-32 relative">
+        {" "}
+        {/* ✅ relative 추가 */}
         <ResponsiveContainer width="100%" height="100%">
           {ratingData.length === 0 ? (
             <div className="absolute inset-0 flex items-center justify-center z-10 bg-white dark:bg-gray-800 rounded-lg">
@@ -402,11 +406,11 @@ export default function StatisticsTab() {
                 animationDuration={800}
               />
             </BarChart>
-        )}
-      </ResponsiveContainer>
-    </div>
-  );
-};
+          )}
+        </ResponsiveContainer>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-4" style={{ outline: "none" }}>
@@ -458,35 +462,34 @@ export default function StatisticsTab() {
 
       {/* 상단 통계 블록 */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-  {/* 평균 평점 - 빨간 배경 */}
-  <div className="w-full h-[71px] bg-[#EB4C34] border border-[#EB4C34] rounded-[10px] relative flex justify-center items-center">
-    <div className="absolute top-[12.52px] left-1/2 transform -translate-x-1/2">
-      <p className="font-bold text-2xl leading-7 text-center text-white">
-        {statistics.avgRating.toFixed(1)}
-      </p>
-    </div>
-    <div className="absolute top-[43px] left-1/2 transform -translate-x-1/2">
-      <p className="font-normal text-[11px] leading-[13px] text-center text-white">
-        평균 평점
-      </p>
-    </div>
-  </div>
+        {/* 평균 평점 - 빨간 배경 */}
+        <div className="w-full h-[71px] bg-[#EB4C34] border border-[#EB4C34] rounded-[10px] relative flex justify-center items-center">
+          <div className="absolute top-[12.52px] left-1/2 transform -translate-x-1/2">
+            <p className="font-bold text-2xl leading-7 text-center text-white">
+              {statistics.avgRating.toFixed(1)}
+            </p>
+          </div>
+          <div className="absolute top-[43px] left-1/2 transform -translate-x-1/2">
+            <p className="font-normal text-[11px] leading-[13px] text-center text-white">
+              평균 평점
+            </p>
+          </div>
+        </div>
 
-  {/* 총 리뷰 수 - 빨간 배경 */}
-  <div className="w-full h-[71px] bg-[#EB4C34] border border-[#EB4C34] rounded-[10px] relative flex justify-center items-center">
-    <div className="absolute top-[12.52px] left-1/2 transform -translate-x-1/2">
-      <p className="font-bold text-2xl leading-7 text-center text-white">
-        {statistics.totalReviewCount}개
-      </p>
-    </div>
-    <div className="absolute top-[43px] left-1/2 transform -translate-x-1/2">
-      <p className="font-normal text-[11px] leading-[13px] text-center text-white">
-        총 리뷰 수
-      </p>
-    </div>
-  </div>
-</div>
-
+        {/* 총 리뷰 수 - 빨간 배경 */}
+        <div className="w-full h-[71px] bg-[#EB4C34] border border-[#EB4C34] rounded-[10px] relative flex justify-center items-center">
+          <div className="absolute top-[12.52px] left-1/2 transform -translate-x-1/2">
+            <p className="font-bold text-2xl leading-7 text-center text-white">
+              {statistics.totalReviewCount}개
+            </p>
+          </div>
+          <div className="absolute top-[43px] left-1/2 transform -translate-x-1/2">
+            <p className="font-normal text-[11px] leading-[13px] text-center text-white">
+              총 리뷰 수
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* 이번 달 활동 */}
       <Card className="relative overflow-hidden cursor-pointer w-full transition-colors border-10 shadow-[0_3px_4px_rgba(0,0,0,0.25)]">
@@ -581,7 +584,7 @@ export default function StatisticsTab() {
       </div>
 
       {/* 자주 방문한 음식점 */}
-      <Card
+      {/* <Card
         className={`border-0 shadow-none ${
           isDarkMode ? "bg-gray-800" : "bg-white"
         }`}
@@ -653,7 +656,7 @@ export default function StatisticsTab() {
             )}
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* 클릭 시 나타나는 툴팁 */}
       {renderTooltip()}

@@ -132,9 +132,9 @@ export default function AuthPage() {
       // 로딩 페이지로 이동
       router.push("/loading");
 
-      // 잠시 후 지도 페이지로 이동
+      // 잠시 후 홈 페이지로 이동
       setTimeout(() => {
-        router.replace("/map");
+        router.replace("/");
       }, 2000);
     } catch (error: any) {
       console.error("로그인 실패:", error);

@@ -395,6 +395,30 @@ export default function MapPage() {
     }
   };
 
+  // 범례 컴포넌트
+  const MapLegend = () => (
+    <div className="absolute bottom-4 left-4 bg-white rounded-lg p-3 shadow-sm text-xs flex gap-3 z-10">
+      <div className="flex items-center gap-1">
+        <span className="w-4 h-4 rounded-full bg-blue-500" />
+        현재 위치
+      </div>
+      <div className="flex items-center gap-1">
+        <span className="w-4 h-4 rounded-full bg-red-500 flex items-center justify-center">
+          <Star className="w-2 h-2 fill-white text-white" />
+        </span>
+        즐겨찾기
+      </div>
+      <div className="flex items-center gap-1">
+        <span className="w-4 h-4 rounded-full bg-blue-600" />
+        방문함
+      </div>
+      <div className="flex items-center gap-1">
+        <span className="w-4 h-4 rounded-full bg-gray-400" />
+        일반
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen pb-20 bg-white">
       <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
@@ -440,26 +464,7 @@ export default function MapPage() {
           </div>
         </div>
 
-        <div className="absolute bottom-4 left-4 bg-white rounded-lg p-3 shadow-sm text-xs flex gap-3">
-          <div className="flex items-center gap-1">
-            <span className="w-4 h-4 rounded-full bg-blue-500" />
-            현재 위치
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-4 h-4 rounded-full bg-red-500 flex items-center justify-center">
-              <Star className="w-2 h-2 fill-white text-white" />
-            </span>
-            즐겨찾기
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-4 h-4 rounded-full bg-blue-600" />
-            방문함
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-4 h-4 rounded-full bg-gray-400" />
-            일반
-          </div>
-        </div>
+        <MapLegend />
       </div>
 
       <div className="px-4 py-4 space-y-3">

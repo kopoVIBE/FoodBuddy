@@ -8,7 +8,7 @@ export default function LoadingPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace("/map");
+      router.replace("/");
     }, 2000);
 
     return () => clearTimeout(timer);
