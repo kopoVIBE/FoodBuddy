@@ -76,14 +76,14 @@ export default function WritePage() {
       console.error("Error data:", error.response?.data);
       console.error("========================");
 
-      let errorMessage = "영수증 인식 중 오류가 발생했습니다.";
+      let errorMessage = t("ocrError");
       if (error.response?.status === 403) {
-        errorMessage = "서버 접근이 거부되었습니다. CORS 설정을 확인해주세요.";
+        errorMessage = t("serverAccessDenied");
       } else if (error.response?.status === 500) {
-        errorMessage = "서버 내부 오류가 발생했습니다.";
+        errorMessage = t("serverInternalError");
       }
 
-      alert(errorMessage + " 다시 시도해주세요.");
+      alert(errorMessage + t("tryAgain"));
       setShowModal(false); // 오류 발생 시 모달 닫기
       setNavigationDisabled(false); // 오류 발생 시 네비게이션 활성화
     } finally {
@@ -149,19 +149,19 @@ export default function WritePage() {
 
   const handleNext = async () => {
     if (!uploadedImage) {
-      alert("먼저 영수증을 업로드해주세요!");
+      alert(t("pleaseUploadReceipt"));
       return;
     }
     if (!ocrCompleted) {
-      alert("영수증 정보 확인을 완료해주세요!");
+      alert(t("pleaseCompleteOcr"));
       return;
     }
     if (!selectedTone) {
-      alert("말투를 선택해주세요!");
+      alert(t("pleaseSelectTone"));
       return;
     }
     if (!rating) {
-      alert("별점을 선택해주세요!");
+      alert(t("pleaseSelectRating"));
       return;
     }
 
@@ -171,7 +171,7 @@ export default function WritePage() {
 
   const generateReviewContent = async () => {
     if (!ocrResult) {
-      alert("영수증 정보가 없습니다!");
+      alert(t("noReceiptInfo"));
       return;
     }
 
@@ -203,24 +203,24 @@ export default function WritePage() {
       console.error("리뷰 생성 중 오류:", error);
 
       // 오류 발생 시 기존 템플릿 사용
-              setTimeout(() => {
-          setShowModal(false);
-          const template =
-            reviewTemplates[selectedTone as keyof typeof reviewTemplates];
-          let finalReview = template;
+      setTimeout(() => {
+        setShowModal(false);
+        const template =
+          reviewTemplates[selectedTone as keyof typeof reviewTemplates];
+        let finalReview = template;
 
-          // 추가 단어가 있으면 리뷰에 포함
-          if (additionalWords.trim()) {
-            finalReview += ` ${additionalWords.trim()}`;
-          }
+        // 추가 단어가 있으면 리뷰에 포함
+        if (additionalWords.trim()) {
+          finalReview += ` ${additionalWords.trim()}`;
+        }
 
-          setGeneratedReview(finalReview);
-          setShowGeneratedReview(true);
-          setNavigationDisabled(false); // 오류 처리 후에도 네비게이션 활성화
+        setGeneratedReview(finalReview);
+        setShowGeneratedReview(true);
+        setNavigationDisabled(false); // 오류 처리 후에도 네비게이션 활성화
 
-          // 사용자에게 알림
-          alert("AI 리뷰 생성에 실패하여 기본 템플릿을 사용합니다.");
-        }, 3000);
+        // 사용자에게 알림
+        alert(t("aiReviewFailed"));
+      }, 3000);
     }
   };
 
@@ -239,7 +239,7 @@ export default function WritePage() {
       // 최신 Clipboard API 사용 (HTTPS 환경에서만 작동)
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(generatedReview);
-        alert("리뷰가 클립보드에 복사되었습니다!");
+        alert(t("reviewCopied"));
       } else {
         // Fallback 방법: 임시 텍스트 영역 생성 후 복사
         const textArea = document.createElement('textarea');
@@ -253,27 +253,27 @@ export default function WritePage() {
         
         try {
           document.execCommand('copy');
-          alert("리뷰가 클립보드에 복사되었습니다!");
+          alert(t("reviewCopied"));
         } catch (err) {
           console.error('Fallback 복사 실패:', err);
           // 최후의 수단: 텍스트 선택 상태로 두기
           textArea.style.position = 'static';
           textArea.style.left = '0';
           textArea.style.top = '0';
-          alert("복사 기능을 사용할 수 없습니다. 텍스트를 직접 선택해서 복사해주세요.");
+          alert(t("copyNotSupported"));
         } finally {
           document.body.removeChild(textArea);
         }
       }
     } catch (error) {
       console.error('클립보드 복사 오류:', error);
-      alert("복사 중 오류가 발생했습니다. 텍스트를 직접 선택해서 복사해주세요.");
+      alert(t("copyError"));
     }
   };
 
   const saveReview = async () => {
     if (!ocrResult || !selectedTone || !generatedReview) {
-      alert("리뷰 저장에 필요한 정보가 부족합니다.");
+      alert(t("reviewSaveFailed"));
       return;
     }
 
@@ -310,21 +310,19 @@ export default function WritePage() {
       const response = await saveCompleteReview(reviewData);
 
       if (response.success) {
-        alert(
-          "리뷰가 성공적으로 저장되었습니다!"
-        );
+        alert(t("reviewSaveSuccess"));
         
         // 홈 화면으로 이동
         router.push('/');
       } else {
-        alert("리뷰 저장에 실패했습니다: " + response.message);
+        alert(t("reviewSaveFailed") + ": " + response.message);
       }
     } catch (error: any) {
       console.error("리뷰 저장 중 오류:", error);
 
       let errorMessage = "리뷰 저장 중 오류가 발생했습니다.";
       if (error.response?.status === 401) {
-        errorMessage = "로그인이 필요합니다.";
+        errorMessage = t("loginRequired");
       } else if (error.response?.status === 400) {
         errorMessage = "잘못된 요청입니다. 입력 정보를 확인해주세요.";
       } else if (error.response?.data?.message) {
@@ -336,10 +334,10 @@ export default function WritePage() {
   };
 
   return (
-    <div className="min-h-screen pb-20 bg-white">
+    <div className={`min-h-screen pb-20 ${isDarkMode ? "bg-gray-900" : "bg-white"}`}>
       <div className="max-w-md mx-auto px-4 py-6 space-y-6">
         {/* 영수증 업로드 */}
-        <Card className="border-2 border-dashed border-gray-300 bg-white">
+        <Card className={`border-2 border-dashed ${isDarkMode ? "border-gray-600 bg-gray-800" : "border-gray-300 bg-white"}`}>
           <CardContent className="p-8 text-center">
             {uploadedImage ? (
               <div 
@@ -361,19 +359,25 @@ export default function WritePage() {
                         <div className="w-1 h-1 bg-[#FF5722] rounded-full animate-bounce delay-100"></div>
                         <div className="w-1 h-1 bg-[#FF5722] rounded-full animate-bounce delay-200"></div>
                       </div>
-                      <p className="text-sm text-gray-600">영수증 분석 중...</p>
+                      <p className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                        {t("analyzingReceipt")}
+                      </p>
                     </div>
                   ) : ocrResult ? (
                     <div className="space-y-1">
-                      <p className="text-sm text-green-600">영수증 분석 완료 ✓</p>
-                      <p className="text-xs text-gray-500">클릭하여 다시 업로드</p>
+                      <p className="text-sm text-green-600">{t("receiptAnalysisComplete")}</p>
+                      <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                        {t("clickToReupload")}
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-1">
-                      <p className="text-sm text-gray-600">
-                        영수증이 업로드되었습니다
+                      <p className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                        {t("receiptUploaded")}
                       </p>
-                      <p className="text-xs text-gray-500">클릭하여 다시 업로드</p>
+                      <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                        {t("clickToReupload")}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -384,11 +388,11 @@ export default function WritePage() {
                 onClick={handleUploadClick}
               >
                 <div>
-                  <h3 className="font-medium mb-2 text-gray-900">
-                    영수증 업로드 ⬆
+                  <h3 className={`font-medium mb-2 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+                    {t("receiptUploadTitle")}
                   </h3>
-                  <p className="text-sm text-gray-600">
-                    카메라로 영수증을 촬영하거나 갤러리에서 선택해주세요.
+                  <p className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                    {t("receiptUploadDesc")}
                   </p>
                 </div>
               </div>
@@ -413,7 +417,9 @@ export default function WritePage() {
               height={24}
               className="w-6 h-6"
             />
-            <h3 className="font-medium text-gray-900">{t("selectTone")}</h3>
+            <h3 className={`font-medium ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+              {t("selectTone")}
+            </h3>
           </div>
 
           <div className="space-y-2">
@@ -425,7 +431,7 @@ export default function WritePage() {
                 className={`w-full justify-start ${
                   selectedTone === option.id
                     ? "bg-[#FF5722] hover:bg-[#E64A19] text-white"
-                    : "bg-white text-[#FF5722] border border-[#FF5722]"
+                    : `${isDarkMode ? "bg-gray-800 text-[#FF5722] border-[#FF5722]" : "bg-white text-[#FF5722] border border-[#FF5722]"}`
                 } ${!ocrCompleted ? "opacity-50 cursor-not-allowed" : ""}`}
                 variant={selectedTone === option.id ? "default" : "outline"}
               >
@@ -436,17 +442,17 @@ export default function WritePage() {
 
           {/* 추가 단어/문장 입력 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">
-              넣고 싶은 단어나 문장이 있나요? (선택사항)
+            <label className={`text-sm font-medium ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}>
+              {t("additionalWordsLabel")}
             </label>
             <Input
               value={additionalWords}
               onChange={(e) => setAdditionalWords(e.target.value)}
               disabled={!ocrCompleted}
-              placeholder="예: 맛있어요, 친절해요, 분위기 좋아요..."
+              placeholder={t("additionalWordsPlaceholder")}
               className={`w-full ${
                 !ocrCompleted ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              } ${isDarkMode ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400" : ""}`}
             />
           </div>
 
@@ -458,36 +464,40 @@ export default function WritePage() {
             }
             className="w-full bg-[#FF5722] hover:bg-[#E64A19] text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            다음 단계
+            {t("nextStep")}
           </Button>
         </div>
 
         {/* 생성된 리뷰 */}
         {showGeneratedReview && (
           <div className="space-y-4">
-            <h3 className="font-medium flex items-center gap-2 text-gray-900">
-              ✨ {t("generatedReview")} (별점: {rating}점)
+            <h3 className={`font-medium flex items-center gap-2 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+              ✨ {t("generatedReview")} ({t("rating")}: {rating}{t("ratingUnit")})
             </h3>
 
             {/* 수정 가능한 회색 텍스트 영역 */}
             <div className="relative">
-              <div className="bg-gray-100 rounded-lg p-4">
+              <div className={`${isDarkMode ? "bg-gray-700" : "bg-gray-100"} rounded-lg p-4`}>
                 <Textarea
                   value={generatedReview}
                   onChange={(e) => setGeneratedReview(e.target.value)}
                   rows={6}
-                  className="w-full bg-transparent border-0 text-sm leading-relaxed text-gray-800 resize-none p-0 focus:ring-0 focus:outline-none"
-                  placeholder="리뷰를 수정할 수 있습니다..."
+                  className={`w-full bg-transparent border-0 text-sm leading-relaxed resize-none p-0 focus:ring-0 focus:outline-none ${
+                    isDarkMode ? "text-gray-200 placeholder-gray-400" : "text-gray-800"
+                  }`}
+                  placeholder={t("reviewPlaceholder")}
                 />
 
                 {/* 복사 아이콘 */}
                 <button
                   onClick={copyToClipboard}
-                  className="absolute bottom-3 right-3 p-2 hover:bg-gray-200 rounded-full transition-colors"
+                  className={`absolute bottom-3 right-3 p-2 rounded-full transition-colors ${
+                    isDarkMode ? "hover:bg-gray-600" : "hover:bg-gray-200"
+                  }`}
                 >
                   <Image
                     src="/icons/copy.svg"
-                    alt="복사"
+                    alt={t("copy")}
                     width={13}
                     height={14}
                     className="w-3.5 h-3.5"
